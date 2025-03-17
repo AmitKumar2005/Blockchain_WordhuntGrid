@@ -1,0 +1,183 @@
+body{
+    margin: 0;
+    padding: 0;
+}
+
+.heading {
+    padding: 2%;
+    color: white;
+    background-color: brown;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.row {
+    width: 33.3%;
+}
+
+.choice{
+    padding: 55px;
+    font-size: 40px;
+    text-align: center;
+    font-weight: 600;
+    border-radius: 20px;
+    margin: 2%;
+    border: 2px solid brown;
+    background-color: rgb(235, 70, 70);
+    box-shadow: 0 7px 7px grey;
+}
+
+.choice:hover {
+    opacity: 0.8;
+}
+
+.blur-background {
+    filter: blur(15px);
+    pointer-events: none;
+}
+
+.display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.display.active {
+    display: flex;
+}
+
+.table{
+    background-color: brown;
+}
+
+.timer{
+    position: absolute;
+    right: 30px;
+    top: 5%;
+    text-align: center;
+    font-size: 35px;
+    background-color: rgb(124, 191, 251);
+    border: 2px solid brown;
+    padding:1%;
+    border-radius: 50%;
+}
+
+.login{
+    position: absolute;
+    right: 150px;
+    top: 5%;
+    text-align: center;
+    font-size: 25px;
+    background-color: rgb(235, 70, 70);
+    padding: 1%;
+    border-radius: 50%;
+}
+
+.signin{
+    position: absolute;
+    right: 30px;
+    top: 5%;
+    text-align: center;
+    font-size: 25px;
+    background-color: rgb(235, 70, 70);
+    padding: 1%;
+    border-radius: 50%;
+}
+
+.grid{
+    margin: 1% 30% 8% 30%;
+}
+
+.cell{
+    padding: 20px 20px 20px 20px;
+    margin: 5px;
+    border: 2px solid brown;
+    border-radius: 30%;
+    /* border-spacing: 0ch; */
+    background-color: rgb(124, 191, 251);
+} 
+
+.listGrid{
+    position: absolute;
+    margin: 2%;
+    margin-top: 12%;
+    width: 20%;
+    padding: 1%;
+    background-color: skyblue;
+    border-radius: 20px;
+}
+
+.listGrid th{
+    font-size:large;
+}
+
+.listRow{
+    display: grid;
+    background-color: brown;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.done{
+    position: absolute;
+    left: 3%;
+    top: 5%;
+    font-size: 50px;
+    font-weight: bold;
+    background-color: brown;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.cell.selected{
+    background-color: brown;
+}
+
+.cell.found{
+    background-color: brown;
+}
+
+.listRow.append{
+    filter: blur(5px);
+}
+
+.loseGame{
+    position: absolute;
+    top: 40%;
+    left: 40%;
+    padding: 40px 80px 90px 80px;
+    font-size: 40px;
+    background-color: brown;
+    border-radius: 20px;
+    box-shadow: 0 20px 20px 0 rgb(95, 80, 80);
+}
+
+.loseGame .claim{
+    position: absolute;
+    margin-top: 4%;
+    left: 10%;
+    padding: 15px;
+    font-size: 20px;
+    background-color: rgb(235, 70, 70);
+    border-radius: 20px;
+    box-shadow: 0 10px 10px 0 grey;
+}
+
+.loseGame .addToWallet{
+    position: absolute;
+    margin-top: 4%;
+    right: 10%;
+    padding: 15px;
+    font-size: 20px;
+    background-color: rgb(235, 70, 70);
+    border-radius: 20px;
+    box-shadow: 0 10px 10px 0 grey;
+}

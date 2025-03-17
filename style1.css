@@ -1,0 +1,23 @@
+.login{
+    position: absolute;
+    margin: 8% 20% 8% 20%;
+    width: 60%;
+    height: 60%;
+    background-color: rgb(235, 70, 70);
+    border-radius: 50%;
+}
+
+form{
+    font-size: 25px;
+    margin: 8% 20% 8% 20%;
+}
+
+#userName, #password{
+    width: 100%;
+    padding: 1%;
+}
+
+#submit{
+    font-size: 20px;
+    padding: 1%;
+}
