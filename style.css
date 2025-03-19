@@ -1,6 +1,17 @@
-body{
+body {
     margin: 0;
     padding: 0;
+}
+
+.enter {
+    position: absolute;
+    top: 6%;
+    right: 5%;
+    font-size: 20px;
+    background-color: rgb(235, 70, 70);
+    padding: 1%;
+    border-radius: 5px;
+    color: white;
 }
 
 .heading {
@@ -18,7 +29,7 @@ body{
     width: 33.3%;
 }
 
-.choice{
+.choice {
     padding: 55px;
     font-size: 40px;
     text-align: center;
@@ -28,6 +39,7 @@ body{
     border: 2px solid brown;
     background-color: rgb(235, 70, 70);
     box-shadow: 0 7px 7px grey;
+    color: rgb(215, 208, 208);
 }
 
 .choice:hover {
@@ -52,11 +64,11 @@ body{
     display: flex;
 }
 
-.table{
+.table {
     background-color: brown;
 }
 
-.timer{
+.timer {
     position: absolute;
     right: 30px;
     top: 5%;
@@ -64,46 +76,24 @@ body{
     font-size: 35px;
     background-color: rgb(124, 191, 251);
     border: 2px solid brown;
-    padding:1%;
-    border-radius: 50%;
-}
-
-.login{
-    position: absolute;
-    right: 150px;
-    top: 5%;
-    text-align: center;
-    font-size: 25px;
-    background-color: rgb(235, 70, 70);
     padding: 1%;
     border-radius: 50%;
 }
 
-.signin{
-    position: absolute;
-    right: 30px;
-    top: 5%;
-    text-align: center;
-    font-size: 25px;
-    background-color: rgb(235, 70, 70);
-    padding: 1%;
-    border-radius: 50%;
-}
-
-.grid{
+.grid {
     margin: 1% 30% 8% 30%;
 }
 
-.cell{
+.cell {
     padding: 20px 20px 20px 20px;
     margin: 5px;
     border: 2px solid brown;
     border-radius: 30%;
     /* border-spacing: 0ch; */
     background-color: rgb(124, 191, 251);
-} 
+}
 
-.listGrid{
+.listGrid {
     position: absolute;
     margin: 2%;
     margin-top: 12%;
@@ -113,11 +103,11 @@ body{
     border-radius: 20px;
 }
 
-.listGrid th{
-    font-size:large;
+.listGrid th {
+    font-size: large;
 }
 
-.listRow{
+.listRow {
     display: grid;
     background-color: brown;
     text-align: center;
@@ -126,7 +116,7 @@ body{
     padding: 10px;
 }
 
-.done{
+.done {
     position: absolute;
     left: 3%;
     top: 5%;
@@ -137,19 +127,20 @@ body{
     padding: 20px;
 }
 
-.cell.selected{
+.cell.selected {
     background-color: brown;
 }
 
-.cell.found{
+.cell.found {
     background-color: brown;
 }
 
-.listRow.append{
+.listRow.append {
     filter: blur(5px);
 }
 
-.loseGame{
+.loseGame,
+.winGame {
     position: absolute;
     top: 40%;
     left: 40%;
@@ -160,7 +151,8 @@ body{
     box-shadow: 0 20px 20px 0 rgb(95, 80, 80);
 }
 
-.loseGame .claim{
+.loseGame .claim,
+.winGame .claim {
     position: absolute;
     margin-top: 4%;
     left: 10%;
@@ -171,7 +163,8 @@ body{
     box-shadow: 0 10px 10px 0 grey;
 }
 
-.loseGame .addToWallet{
+.loseGame .addToWallet,
+.winGame .addToWallet {
     position: absolute;
     margin-top: 4%;
     right: 10%;
@@ -180,4 +173,26 @@ body{
     background-color: rgb(235, 70, 70);
     border-radius: 20px;
     box-shadow: 0 10px 10px 0 grey;
+}
+
+.metamaskAccount.accountNo {
+    position: absolute;
+    top: 40%;
+    left: 35%;
+    width: 340px;
+    background-color: rgba(165, 42, 42);
+    padding: 40px 80px 40px 80px;
+    border-radius: 20px;
+    font-size: 20px;
+    z-index: 10;
+}
+
+.accountInput {
+    font-size: 20px;
+    width: 100%;
+}
+
+.accSubmit {
+    padding: 8px;
+    border-radius: 10px;
 }

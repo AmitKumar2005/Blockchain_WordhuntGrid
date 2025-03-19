@@ -12,8 +12,10 @@ const words = [
 const dir = ["horizontal_toRight", "horizontal_toLeft", "top_down", "upside_down", "diagonal_left_top", "diagonal_right_top"];
 
 const display = document.querySelector('.display');
+const metamaskAccount = document.querySelector('.metamaskAccount');
 const timer = document.createElement('div');
 const done = document.createElement('div');
+let accountNumber = "";
 done.className = "done";
 display.appendChild(done);
 timer.innerText = "02:00";
@@ -29,8 +31,8 @@ let str = "";
 let initx = -1;
 let inity = -1;
 
-const n = 11;
-const grid = new Array(n).fill().map(() => new Array(n).fill(-1));
+const n = 11, m = 15;
+const grid = new Array(n).fill().map(() => new Array(m).fill(-1));
 
 function setup() {
     wordPositions = [];
@@ -39,7 +41,7 @@ function setup() {
 
     while (placedWords < list.length) {
         for (let i = 0; i < n; i++) {
-            for (let j = 0; j < n; j++) {
+            for (let j = 0; j < m; j++) {
                 grid[i][j] = -1;
             }
         }
@@ -53,51 +55,11 @@ function setup() {
             while (!isAssigned && maxAttempt > 0) {
                 let len = list[i].length;
                 let x = Math.floor(Math.random() * n);
-                let y = Math.floor(Math.random() * n);
+                let y = Math.floor(Math.random() * m);
                 let idx = Math.floor(Math.random() * dir.length);
                 let positions = [];
 
-                if (idx === 0 && y + len - 1 < n) {
-                    let available = true;
-                    for (let j = 0; j < len; j++) if (grid[x][y + j] !== -1) available = false;
-                    if (available) {
-                        for (let j = 0; j < len; j++) {
-                            grid[x][y + j] = list[i][j];
-                            positions.push([x, y + j]);
-                        }
-                        isAssigned = true;
-                    }
-                } else if (idx === 1 && y - len + 1 >= 0) {
-                    let available = true;
-                    for (let j = 0; j < len; j++) if (grid[x][y - j] !== -1) available = false;
-                    if (available) {
-                        for (let j = 0; j < len; j++) {
-                            grid[x][y - j] = list[i][j];
-                            positions.push([x, y - j]);
-                        }
-                        isAssigned = true;
-                    }
-                } else if (idx === 2 && x + len - 1 < n) {
-                    let available = true;
-                    for (let j = 0; j < len; j++) if (grid[x + j][y] !== -1) available = false;
-                    if (available) {
-                        for (let j = 0; j < len; j++) {
-                            grid[x + j][y] = list[i][j];
-                            positions.push([x + j, y]);
-                        }
-                        isAssigned = true;
-                    }
-                } else if (idx === 3 && x - len + 1 >= 0) {
-                    let available = true;
-                    for (let j = 0; j < len; j++) if (grid[x - j][y] !== -1) available = false;
-                    if (available) {
-                        for (let j = 0; j < len; j++) {
-                            grid[x - j][y] = list[i][j];
-                            positions.push([x - j, y]);
-                        }
-                        isAssigned = true;
-                    }
-                } else if (idx === 4 && x + len - 1 < n && y + len - 1 < n) {
+                if (idx === 4 && x + len - 1 < n && y + len - 1 < m) {
                     let available = true;
                     for (let j = 0; j < len; j++) if (grid[x + j][y + j] !== -1) available = false;
                     if (available) {
@@ -107,7 +69,52 @@ function setup() {
                         }
                         isAssigned = true;
                     }
-                } else if (idx === 5 && x - len + 1 >= 0 && y + len - 1 < n) {
+                }
+                else if (idx === 2 && x + len - 1 < n) {
+                    let available = true;
+                    for (let j = 0; j < len; j++) if (grid[x + j][y] !== -1) available = false;
+                    if (available) {
+                        for (let j = 0; j < len; j++) {
+                            grid[x + j][y] = list[i][j];
+                            positions.push([x + j, y]);
+                        }
+                        isAssigned = true;
+                    }
+                }
+                else if (idx === 0 && y + len - 1 < m) {
+                    let available = true;
+                    for (let j = 0; j < len; j++) if (grid[x][y + j] !== -1) available = false;
+                    if (available) {
+                        for (let j = 0; j < len; j++) {
+                            grid[x][y + j] = list[i][j];
+                            positions.push([x, y + j]);
+                        }
+                        isAssigned = true;
+                    }
+                }
+                else if (idx === 1 && y - len + 1 >= 0) {
+                    let available = true;
+                    for (let j = 0; j < len; j++) if (grid[x][y - j] !== -1) available = false;
+                    if (available) {
+                        for (let j = 0; j < len; j++) {
+                            grid[x][y - j] = list[i][j];
+                            positions.push([x, y - j]);
+                        }
+                        isAssigned = true;
+                    }
+                }
+                else if (idx === 3 && x - len + 1 >= 0) {
+                    let available = true;
+                    for (let j = 0; j < len; j++) if (grid[x - j][y] !== -1) available = false;
+                    if (available) {
+                        for (let j = 0; j < len; j++) {
+                            grid[x - j][y] = list[i][j];
+                            positions.push([x - j, y]);
+                        }
+                        isAssigned = true;
+                    }
+                }
+                else if (idx === 5 && x - len + 1 >= 0 && y + len - 1 < m) {
                     let available = true;
                     for (let j = 0; j < len; j++) if (grid[x - j][y + j] !== -1) available = false;
                     if (available) {
@@ -128,7 +135,7 @@ function setup() {
     }
 
     for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
+        for (let j = 0; j < m; j++) {
             if (grid[i][j] === -1) grid[i][j] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
         }
     }
@@ -145,7 +152,7 @@ function displayGrid() {
     for (let i = 0; i < n; i++) {
         const row = document.createElement('tr');
         row.className = "row";
-        for (let j = 0; j < n; j++) {
+        for (let j = 0; j < m; j++) {
             const cell = document.createElement('td');
             cell.className = "cell";
             cell.innerText = grid[i][j];
@@ -161,11 +168,11 @@ function displayGrid() {
 }
 
 
-function addGridListener(){
+function addGridListener() {
     const cells = document.querySelectorAll('.cell');
 
     cells.forEach(cell => {
-        cell.addEventListener('mousedown', function(e){
+        cell.addEventListener('mousedown', function (e) {
             if (!cell.classList.contains('found') && !isPressed) {
                 e.preventDefault();
                 isPressed = true;
@@ -177,25 +184,25 @@ function addGridListener(){
             }
         });
 
-        cell.addEventListener('mouseover', function(e){
+        cell.addEventListener('mouseover', function (e) {
             e.preventDefault();
-                if (isPressed && !cell.classList.contains('found')) {
+            if (isPressed && !cell.classList.contains('found')) {
                 let curx = parseInt(cell.dataset.row), cury = parseInt(cell.dataset.col);
-                if(isValidDirection(initx, inity, curx, cury, coordinates)){
+                if (isValidDirection(initx, inity, curx, cury, coordinates)) {
                     if (!coordinates.some(([x, y]) => x === curx && y === cury)) {
                         str += cell.innerText;
                         cell.classList.add('selected');
                         coordinates.push([curx, cury]);
                     }
                 }
-                else{
+                else {
                     reset();
                 }
             }
         });
 
 
-        cell.addEventListener('mouseup', function(e){
+        cell.addEventListener('mouseup', function (e) {
             e.preventDefault();
             if (isPressed) {
                 isPressed = false;
@@ -205,7 +212,7 @@ function addGridListener(){
         });
     })
 
-    document.querySelector('.grid').addEventListener('mouseleave', function(e) {
+    document.querySelector('.grid').addEventListener('mouseleave', function (e) {
         e.preventDefault();
         if (isPressed) {
             isPressed = false;
@@ -214,31 +221,31 @@ function addGridListener(){
     });
 }
 
-function isValidDirection(initx, inity, curx, cury, coordinates){
+function isValidDirection(initx, inity, curx, cury, coordinates) {
     if (coordinates.length === 1) return true;
     let dx = curx - initx;
     let dy = cury - inity;
     let len = coordinates.length;
-    if (dx === 0){                                       
+    if (dx === 0) {
         return dy === len || dy === -len;
     }
-    else if (dy === 0){                                  
+    else if (dy === 0) {
         return dx === len || dx === -len;
     }
-    else if (Math.abs(dx) === Math.abs(dy)){             
+    else if (Math.abs(dx) === Math.abs(dy)) {
         return (dx === len && dy === len) || (dx === -len && dy === -len) || (dx === len && dy === -len) || (dx === -len && dy === len);
     }
     return false;
 }
 
-function reset(){
+function reset() {
     str = "";
     coordinates = [];
     isPressed = false;
     clearSelection();
 }
 
-function clearSelection(){
+function clearSelection() {
     document.querySelectorAll('.cell.selected').forEach(cell => {
         if (!cell.classList.contains('found')) cell.classList.remove('selected');
     })
@@ -269,13 +276,13 @@ function check() {
 }
 
 function coordinatesMatch(wordPos, selectedCoordinates) {
-    if (wordPos.length !== selectedCoordinates.length)      return false;
-    return wordPos.every(([row, col], i) => row === selectedCoordinates[i][0] && col === selectedCoordinates[i][1]) || 
-           wordPos.every(([row, col], i) => row === selectedCoordinates[selectedCoordinates.length - 1 - i][0] && 
-                                            col === selectedCoordinates[selectedCoordinates.length - 1 - i][1]);
+    if (wordPos.length !== selectedCoordinates.length) return false;
+    return wordPos.every(([row, col], i) => row === selectedCoordinates[i][0] && col === selectedCoordinates[i][1]) ||
+        wordPos.every(([row, col], i) => row === selectedCoordinates[selectedCoordinates.length - 1 - i][0] &&
+            col === selectedCoordinates[selectedCoordinates.length - 1 - i][1]);
 }
 
-function displayList(){
+function displayList() {
     const table = document.createElement('table');
     const heading = document.createElement('th');
     const headingRow = document.createElement('tr');
@@ -284,7 +291,7 @@ function displayList(){
     heading.innerText = 'Remaining';
     table.className = 'listGrid';
     table.appendChild(heading);
-    for(let i=0;i<10;i++){
+    for (let i = 0; i < 10; i++) {
         const row = document.createElement('tr');
         row.className = 'listRow';
         row.innerText = words[id][i];
@@ -301,27 +308,11 @@ function updateTimer() {
     if (leftTime <= 0) {
         clearInterval(ut);
         timer.innerText = "00:00";
-        lose();
+        collectAmount();
     }
 }
 
-function lose(){
-    display.classList.remove('active');
-    const loseGame = document.createElement('div');
-    loseGame.className = 'loseGame';
-    loseGame.innerText = `Your Score is ${correctCount}`;
-    const claim = document.createElement('div');
-    claim.className = 'claim';
-    claim.innerText = 'Claim';
-    loseGame.appendChild(claim);
-    const addToWallet = document.createElement('div');
-    addToWallet.className = 'addToWallet';
-    addToWallet.innerText = 'Add to Wallet';
-    loseGame.appendChild(addToWallet);
-    document.body.appendChild(loseGame);
-}
-
-function correctGuess(){
+function correctGuess() {
     let done = document.querySelector('.done');
     if (!done) {
         done = document.createElement('div');
@@ -332,14 +323,14 @@ function correctGuess(){
     checkwin();
 }
 
-function checkwin(){
-    if(correctCount==10){
+function checkwin() {
+    if (correctCount == 10) {
         clearInterval(ut);
-        win();
+        collectAmount();
     }
 }
 
-function win(){
+function collectAmount() {
     display.classList.remove('active');
     const winGame = document.createElement('div');
     winGame.className = 'winGame';
@@ -353,6 +344,34 @@ function win(){
     addToWallet.innerText = 'Add to Wallet';
     winGame.appendChild(addToWallet);
     document.body.appendChild(winGame);
+    claim.addEventListener('mousedown', async function () {
+        winGame.innerText = "Processing...";
+        const response = await fetch("http://localhost:5000/transfer", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ points: correctCount, address: accountNumber })
+        });
+
+        const res = await response.json();
+        if (res.valid == false) {
+            alert("Transaction failed. Tokens added to your wallet. Collect it from your wallet after some time.!");
+        }
+        else {
+            winGame.innerHTML = '';
+            winGame.innerText = "Transaction Success!";
+            setTimeout(() => {
+                document.body.removeChild(winGame);
+                document.querySelector('.category').classList.remove('blur-background');
+            }, 1000)
+        }
+    })
+    addToWallet.addEventListener('mousedown', () => {
+        //Transaction failed case
+        winGame.innerText = "Processing...";
+        console.log("Hello Wallet");
+    })
 }
 
 function gameStart() {
@@ -364,7 +383,7 @@ function gameStart() {
     ut = setInterval(updateTimer, 1000);
 }
 
-document.querySelector('.container').addEventListener('click', function(e){
+document.querySelector('.container').addEventListener('click', function (e) {
     if (e.target.classList.contains('choice')) {
         document.querySelector('.category').classList.add('blur-background');
         display.classList.add('active');
@@ -372,3 +391,49 @@ document.querySelector('.container').addEventListener('click', function(e){
         gameStart();
     }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (accountNumber === "") {
+        let acc = setTimeout(() => {
+            document.querySelector('.category').classList.add('blur-background');
+            metamaskAccount.classList.add('accountNo');
+            metamaskAccount.innerHTML = `
+                <form class="accForm">
+                    <label for="accountNo">Account No.:</label><br><br>
+                    <input type="text" name="accountNo" class="accountInput" placeholder="Enter your account address here" required><br><br>
+                    <button type="submit" class="accSubmit">Submit</button>
+                </form>
+            `;
+
+            document.querySelector('.accForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                accountNumber = document.querySelector('.accountInput').value;
+                document.querySelector('.category').classList.remove('blur-background');
+                metamaskAccount.classList.remove('accountNo');
+                metamaskAccount.innerHTML = '';
+                processAddress();
+            });
+
+        }, 2000);
+    }
+});
+
+async function processAddress() {
+    const response = await fetch("http://localhost:5000/verifyAddress", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: accountNumber })
+    });
+
+    const res = await response.json();
+    if (res.valid == false) {
+        alert("Non-Ethereum browser detected. You should consider trying MetaMask!");
+    }
+    else {
+        const enter = document.querySelector(".enter");
+        enter.innerText = "Account No.: " + accountNumber[0] + accountNumber[1] + accountNumber[2] + "..." + accountNumber[40] + accountNumber[41];
+    }
+}
+
