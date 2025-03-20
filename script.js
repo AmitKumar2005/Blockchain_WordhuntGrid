@@ -357,6 +357,7 @@ function collectAmount() {
         const res = await response.json();
         if (res.valid == false) {
             alert("Transaction failed. Tokens added to your wallet. Collect it from your wallet after some time.!");
+            addToBalance()
         }
         else {
             winGame.innerHTML = '';
@@ -368,9 +369,11 @@ function collectAmount() {
         }
     })
     addToWallet.addEventListener('mousedown', () => {
-        //Transaction failed case
-        winGame.innerText = "Processing...";
-        console.log("Hello Wallet");
+        addToBalance()
+        setTimeout(() => {
+            document.body.removeChild(winGame);
+            document.querySelector('.category').classList.remove('blur-background');
+        }, 1000)
     })
 }
 
@@ -412,9 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 metamaskAccount.classList.remove('accountNo');
                 metamaskAccount.innerHTML = '';
                 processAddress();
+                balance();
             });
 
-        }, 2000);
+        }, 1000);
     }
 });
 
@@ -437,3 +441,40 @@ async function processAddress() {
     }
 }
 
+async function balance() {
+    const response = await fetch("http://localhost:5000/balance", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: accountNumber })
+    });
+
+    const res = await response.json();
+    if (res.valid == false) {
+        alert("Something Wrong!");
+    }
+    else {
+        const enter = document.querySelector(".wallet");
+        enter.innerText = "Wallet: " + res.balance;
+    }
+}
+
+async function addToBalance() {
+    const response = await fetch("http://localhost:5000/addToBalance", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: accountNumber, points: correctCount })
+    });
+
+    const res = await response.json();
+    if (res.valid == false) {
+        alert("Something Wrong!");
+    }
+    else {
+        const enter = document.querySelector(".wallet");
+        enter.innerText = "Wallet: " + res.balance;
+    }
+}

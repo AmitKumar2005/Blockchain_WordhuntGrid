@@ -1,6 +1,8 @@
 import re
 import os
 import json
+import mysql.connector
+from mysql.connector import Error
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -55,6 +57,107 @@ sendTrans = w3.eth.send_raw_transaction(signTrans.raw_transaction)
 receiptTrans = w3.eth.wait_for_transaction_receipt(sendTrans)
 contAdd = receiptTrans.contractAddress
 newCont = w3.eth.contract(address=contAdd, abi=abi)
+
+host = os.getenv("HOST")
+user = os.getenv("USER")
+password = os.getenv("PASSWORD")
+database = os.getenv("DATABASE")
+
+DB_CONFIG = {"host": host, "user": user, "password": password, "database": database}
+
+
+def get_db_connection():
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        if connection.is_connected():
+            return connection
+    except Error as e:
+        return None
+    return None
+
+
+@app.route("/balance", methods=["POST"])
+def get_balance():
+    try:
+        data = request.get_json()
+        if data is None:
+            return jsonify({"valid": False, "error": "Invalid JSON data"}), 400
+        address = data.get("address", "")
+    except Exception as e:
+        return jsonify({"valid": False, "error": "Failed to parse request data"}), 400
+
+    if not address:
+        return jsonify({"valid": False, "error": "Address is required"}), 400
+
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"valid": False, "error": "Database connection failed"}), 500
+
+    try:
+        cursor = connection.cursor()
+        query = "SELECT balance FROM token WHERE accNo = %s"
+        cursor.execute(query, (address,))
+        result = cursor.fetchone()
+
+        if result:
+            balance = result[0]
+            return jsonify({"valid": True, "balance": balance})
+        else:
+            query = "INSERT INTO token (accNo, balance) VALUES (%s, %s)"
+            cursor.execute(query, (address, 0))
+            connection.commit()
+            return jsonify({"valid": True, "balance": 0})
+
+    except Error as e:
+        if e.errno == 1062:
+            return jsonify({"valid": False, "error": "Account already exists"}), 409
+        return jsonify({"valid": False, "error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"valid": False, "error": f"Unexpected error: {str(e)}"}), 500
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+@app.route("/addToBalance", methods=["POST"])
+def add_balance():
+    data = request.get_json()
+    address = data.get("address", "")
+    points = data.get("points", 0)
+
+    if not address:
+        return jsonify({"valid": False, "error": "Address is required"}), 400
+    if not isinstance(points, (int, float)):
+        return jsonify({"valid": False, "error": "Points must be a number"}), 400
+
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"valid": False, "error": "Database connection failed"}), 500
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT balance FROM token WHERE accNo = %s", (address,))
+        result = cursor.fetchone()
+
+        if not result:
+            return jsonify({"valid": False, "error": "Account not found"}), 404
+
+        current_balance = result[0]
+        new_balance = current_balance + points
+
+        cursor.execute(
+            "UPDATE token SET balance = %s WHERE accNo = %s", (new_balance, address)
+        )
+        connection.commit()
+
+        return jsonify({"valid": True, "balance": new_balance})
+    except Error as e:
+        return jsonify({"valid": False, "error": str(e)}), 500
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
 
 
 def is_valid_ethereum_address(address):
@@ -111,4 +214,8 @@ def transferMoney():
 
 
 if __name__ == "__main__":
+    connection = get_db_connection()
+    if connection:
+        print(f"Connected to MySQL Server version {connection.get_server_info()}")
+        connection.close()
     app.run(debug=True, host="0.0.0.0", port=5000)

@@ -1,12 +1,28 @@
 body {
     margin: 0;
     padding: 0;
+    background-image: url("/images/background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    /* Scales image to cover the entire area */
+    background-position: center;
 }
 
 .enter {
     position: absolute;
-    top: 6%;
+    top: 3%;
     right: 5%;
+    font-size: 20px;
+    background-color: rgb(235, 70, 70);
+    padding: 1%;
+    border-radius: 5px;
+    color: white;
+}
+
+.wallet {
+    position: absolute;
+    top: 3%;
+    right: 20%;
     font-size: 20px;
     background-color: rgb(235, 70, 70);
     padding: 1%;
@@ -16,6 +32,7 @@ body {
 
 .heading {
     padding: 2%;
+    margin-top: 0;
     color: white;
     background-color: brown;
 }
@@ -139,7 +156,6 @@ body {
     filter: blur(5px);
 }
 
-.loseGame,
 .winGame {
     position: absolute;
     top: 40%;
@@ -151,7 +167,6 @@ body {
     box-shadow: 0 20px 20px 0 rgb(95, 80, 80);
 }
 
-.loseGame .claim,
 .winGame .claim {
     position: absolute;
     margin-top: 4%;
@@ -163,7 +178,6 @@ body {
     box-shadow: 0 10px 10px 0 grey;
 }
 
-.loseGame .addToWallet,
 .winGame .addToWallet {
     position: absolute;
     margin-top: 4%;
