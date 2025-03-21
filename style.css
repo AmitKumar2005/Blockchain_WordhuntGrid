@@ -1,11 +1,9 @@
 body {
     margin: 0;
     padding: 0;
-    background-image: url("/images/background.jpg");
-    background-repeat: no-repeat;
-    background-size: cover;
-    /* Scales image to cover the entire area */
-    background-position: center;
+    background-color: #1A1A1A;
+    color: #E0E0E0;
+    font-family: Arial, sans-serif;
 }
 
 .enter {
@@ -13,10 +11,10 @@ body {
     top: 3%;
     right: 5%;
     font-size: 20px;
-    background-color: rgb(235, 70, 70);
+    background-color: #0288D1;
     padding: 1%;
     border-radius: 5px;
-    color: white;
+    color: #FFFFFF;
 }
 
 .wallet {
@@ -24,17 +22,24 @@ body {
     top: 3%;
     right: 20%;
     font-size: 20px;
-    background-color: rgb(235, 70, 70);
+    background-color: #0288D1;
     padding: 1%;
     border-radius: 5px;
-    color: white;
+    color: #FFFFFF;
+}
+
+.enter:hover,
+.wallet:hover {
+    background-color: #0277BD;
+    cursor: pointer;
 }
 
 .heading {
     padding: 2%;
     margin-top: 0;
-    color: white;
-    background-color: brown;
+    color: #FFFFFF;
+    background-color: #D81B60;
+    text-align: center;
 }
 
 .container {
@@ -53,14 +58,15 @@ body {
     font-weight: 600;
     border-radius: 20px;
     margin: 2%;
-    border: 2px solid brown;
-    background-color: rgb(235, 70, 70);
-    box-shadow: 0 7px 7px grey;
-    color: rgb(215, 208, 208);
+    border: 2px solid #F06292;
+    background-color: #0288D1;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.3);
+    color: #FFFFFF;
 }
 
 .choice:hover {
-    opacity: 0.8;
+    background-color: #0277BD;
+    cursor: pointer;
 }
 
 .blur-background {
@@ -82,7 +88,7 @@ body {
 }
 
 .table {
-    background-color: brown;
+    background-color: #D81B60;
 }
 
 .timer {
@@ -91,10 +97,11 @@ body {
     top: 5%;
     text-align: center;
     font-size: 35px;
-    background-color: rgb(124, 191, 251);
-    border: 2px solid brown;
+    background-color: #FFB300;
+    border: 2px solid #FFFFFF;
     padding: 1%;
     border-radius: 50%;
+    color: #1A1A1A;
 }
 
 .grid {
@@ -102,54 +109,61 @@ body {
 }
 
 .cell {
-    padding: 20px 20px 20px 20px;
+    padding: 20px;
     margin: 5px;
-    border: 2px solid brown;
+    border: 2px solid #F06292;
     border-radius: 30%;
-    /* border-spacing: 0ch; */
-    background-color: rgb(124, 191, 251);
+    background-color: #37474F;
+    color: #FFFFFF;
+    text-align: center;
 }
 
 .listGrid {
     position: absolute;
     margin: 2%;
-    margin-top: 12%;
+    margin-top: 10%;
     width: 20%;
     padding: 1%;
-    background-color: skyblue;
+    background-color: #0288D1;
     border-radius: 20px;
+    color: #FFFFFF;
 }
 
 .listGrid th {
     font-size: large;
+    padding: 10px;
 }
 
 .listRow {
     display: grid;
-    background-color: brown;
+    background-color: #D81B60;
     text-align: center;
     border-radius: 5px;
     margin-bottom: 10px;
     padding: 10px;
+    color: #FFFFFF;
 }
 
 .done {
     position: absolute;
-    left: 3%;
+    left: 2%;
     top: 5%;
     font-size: 50px;
     font-weight: bold;
-    background-color: brown;
+    background-color: #FFB300;
     border-radius: 5px;
     padding: 20px;
+    color: #1A1A1A;
 }
 
 .cell.selected {
-    background-color: brown;
+    background-color: #F06292;
+    color: #FFFFFF;
 }
 
 .cell.found {
-    background-color: brown;
+    background-color: #D81B60;
+    color: #FFFFFF;
 }
 
 .listRow.append {
@@ -162,31 +176,39 @@ body {
     left: 40%;
     padding: 40px 80px 90px 80px;
     font-size: 40px;
-    background-color: brown;
+    background-color: #D81B60;
     border-radius: 20px;
-    box-shadow: 0 20px 20px 0 rgb(95, 80, 80);
+    box-shadow: 0 20px 20px 0 rgba(0, 0, 0, 0.5);
+    color: #FFFFFF;
+}
+
+.winGame .claim,
+.winGame .addToWallet,
+.winGame .cancel {
+    position: absolute;
+    margin-top: 4%;
+    padding: 15px;
+    font-size: 20px;
+    background-color: #FFB300;
+    border-radius: 20px;
+    box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.3);
+    color: #1A1A1A;
 }
 
 .winGame .claim {
-    position: absolute;
-    margin-top: 4%;
     left: 10%;
-    padding: 15px;
-    font-size: 20px;
-    background-color: rgb(235, 70, 70);
-    border-radius: 20px;
-    box-shadow: 0 10px 10px 0 grey;
 }
 
-.winGame .addToWallet {
-    position: absolute;
-    margin-top: 4%;
+.winGame .addToWallet,
+.winGame .cancel {
     right: 10%;
-    padding: 15px;
-    font-size: 20px;
-    background-color: rgb(235, 70, 70);
-    border-radius: 20px;
-    box-shadow: 0 10px 10px 0 grey;
+}
+
+.winGame .claim:hover,
+.winGame .addToWallet:hover,
+.winGame .cancel:hover {
+    background-color: #FFA000;
+    cursor: pointer;
 }
 
 .metamaskAccount.accountNo {
@@ -194,19 +216,33 @@ body {
     top: 40%;
     left: 35%;
     width: 340px;
-    background-color: rgba(165, 42, 42);
-    padding: 40px 80px 40px 80px;
+    background-color: #0288D1;
+    padding: 40px 80px;
     border-radius: 20px;
     font-size: 20px;
     z-index: 10;
+    color: #FFFFFF;
 }
 
 .accountInput {
     font-size: 20px;
     width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    background-color: #E0E0E0;
+    border: none;
+    border-radius: 5px;
 }
 
 .accSubmit {
     padding: 8px;
     border-radius: 10px;
+    background-color: #D81B60;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+}
+
+.accSubmit:hover {
+    background-color: #C2185B;
 }
