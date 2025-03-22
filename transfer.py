@@ -180,6 +180,46 @@ def verifyAddress():
     return jsonify({"valid": True, "message": "Connected"})
 
 
+@app.route("/walletTransfer", methods=["POST"])
+def walletTransfer():
+    try:
+        data = request.get_json()
+        points = data.get("points", 0)
+        recipient_address = data.get("address", "")
+        if not is_valid_ethereum_address(recipient_address):
+            return jsonify(
+                {"valid": False, "message": "Invalid recipient Ethereum address"}
+            )
+
+        nonce = w3.eth.get_transaction_count(my_address)
+        totalAmount = newCont.functions.fund(points).call()
+        tx = {
+            "from": my_address,
+            "to": w3.to_checksum_address(recipient_address),
+            "value": totalAmount,
+            "nonce": nonce,
+            "chainId": chain_id,
+            "gas": 2000000,
+            "gasPrice": w3.to_wei("50", "gwei"),
+        }
+        sign_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+        send_tx = w3.eth.send_raw_transaction(sign_tx.raw_transaction)
+        receipt_tx = w3.eth.wait_for_transaction_receipt(send_tx)
+        if receipt_tx.status == 0:
+            print(f"Transaction failed. Receipt: {receipt_tx}")
+            return jsonify({"valid": False, "message": "Unsuccessful Transaction"})
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute(
+            "UPDATE token SET balance = %s WHERE accNo = %s", (0, recipient_address)
+        )
+        connection.commit()
+        return jsonify({"valid": True, "message": "Successfully sent"})
+    except Exception as e:
+        print(f"Error in /transfer: {str(e)}")
+        return jsonify({"valid": False, "message": f"Server error: {str(e)}"}), 500
+
+
 @app.route("/transfer", methods=["POST"])
 def transferMoney():
     try:

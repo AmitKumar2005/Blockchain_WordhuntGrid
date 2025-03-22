@@ -30,7 +30,7 @@ body {
 
 .enter:hover,
 .wallet:hover {
-    background-color: #0277BD;
+    background-color: #035c90;
     cursor: pointer;
 }
 
@@ -65,7 +65,7 @@ body {
 }
 
 .choice:hover {
-    background-color: #0277BD;
+    background-color: #035c90;
     cursor: pointer;
 }
 
@@ -182,9 +182,8 @@ body {
     color: #FFFFFF;
 }
 
-.winGame .claim,
-.winGame .addToWallet,
-.winGame .cancel {
+.winGame .option1,
+.winGame .option2 {
     position: absolute;
     margin-top: 4%;
     padding: 15px;
@@ -195,18 +194,16 @@ body {
     color: #1A1A1A;
 }
 
-.winGame .claim {
+.winGame .option1 {
     left: 10%;
 }
 
-.winGame .addToWallet,
-.winGame .cancel {
+.winGame .option2 {
     right: 10%;
 }
 
-.winGame .claim:hover,
-.winGame .addToWallet:hover,
-.winGame .cancel:hover {
+.winGame .option1:hover,
+.winGame .option2:hover {
     background-color: #FFA000;
     cursor: pointer;
 }
@@ -216,7 +213,7 @@ body {
     top: 40%;
     left: 35%;
     width: 340px;
-    background-color: #0288D1;
+    background-color: #D81B60;
     padding: 40px 80px;
     border-radius: 20px;
     font-size: 20px;
@@ -237,12 +234,21 @@ body {
 .accSubmit {
     padding: 8px;
     border-radius: 10px;
-    background-color: #D81B60;
+    background-color: #FFA000;
+    font-size: large;
     color: #FFFFFF;
     border: none;
     cursor: pointer;
 }
 
 .accSubmit:hover {
-    background-color: #C2185B;
+    background-color: #FFA000;
+}
+
+.footer {
+    position: absolute;
+    width: 98%;
+    padding: 1%;
+    bottom: 1px;
+    background-color: #D81B60;
 }

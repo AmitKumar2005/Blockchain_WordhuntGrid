@@ -5,7 +5,7 @@ const words = [
     ['NOVELS', 'STORIES', 'FANTASY', 'MYSTICS', 'LEGENDS', 'FABLES', 'TALESPIN', 'IMAGINE', 'MYTHICAL', 'DREAMER'],
     ['CINEMA', 'FRAMES', 'REELSUP', 'SCREEN', 'FILMING', 'CLAPPER', 'POPCORN', 'DIRECTS', 'SCENES', 'TICKET'],
     ['MELODIC', 'RHYTHMS', 'TUNESUP', 'HARMONI', 'BEATS', 'LYRICS', 'CHORDS', 'SINGERS', 'NOTATED', 'JUKEBOX'],
-    ['FOREST', 'RIVERS', 'MOUNTIAN', 'OCEANS', 'WILDIFE', 'MEADOW', 'SUNSETS', 'FLORAL', 'BREEZE', 'EARTH'],
+    ['FOREST', 'RIVERS', 'MOUNTAIN', 'OCEANS', 'WILDIFE', 'MEADOW', 'SUNSETS', 'FLORAL', 'BREEZE', 'EARTH'],
     ['ATOMS', 'PHYSICS', 'CHEMIST', 'BIOLOGY', 'RESEARCH', 'LABWORK', 'THEORY', 'EXPERIMENT', 'SCIENCE', 'PROTONS'],
     ['GADGETS', 'CIRCUITS', 'SOFTWARE', 'HARDWARE', 'CODING', 'TECHBIT', 'INNOVATE', 'DIGITAL', 'NETWORK', 'ROBOTS']
 ];
@@ -13,8 +13,11 @@ const dir = ["horizontal_toRight", "horizontal_toLeft", "top_down", "upside_down
 
 const display = document.querySelector('.display');
 const metamaskAccount = document.querySelector('.metamaskAccount');
+const wallet = document.querySelector('.wallet');
 const timer = document.createElement('div');
 const done = document.createElement('div');
+const enter = document.querySelector('.enter');
+let walletBalance = 0;
 let accountNumber = "";
 done.className = "done";
 display.appendChild(done);
@@ -167,6 +170,23 @@ function displayGrid() {
     correctGuess();
 }
 
+function displayList() {
+    const table = document.createElement('table');
+    const heading = document.createElement('th');
+    const headingRow = document.createElement('tr');
+    headingRow.appendChild(heading);
+    table.appendChild(headingRow);
+    heading.innerText = 'Remaining';
+    table.className = 'listGrid';
+    table.appendChild(heading);
+    for (let i = 0; i < 10; i++) {
+        const row = document.createElement('tr');
+        row.className = 'listRow';
+        row.innerText = words[id][i];
+        table.appendChild(row);
+    }
+    display.appendChild(table);
+}
 
 function addGridListener() {
     const cells = document.querySelectorAll('.cell');
@@ -282,23 +302,6 @@ function coordinatesMatch(wordPos, selectedCoordinates) {
             col === selectedCoordinates[selectedCoordinates.length - 1 - i][1]);
 }
 
-function displayList() {
-    const table = document.createElement('table');
-    const heading = document.createElement('th');
-    const headingRow = document.createElement('tr');
-    headingRow.appendChild(heading);
-    table.appendChild(headingRow);
-    heading.innerText = 'Remaining';
-    table.className = 'listGrid';
-    table.appendChild(heading);
-    for (let i = 0; i < 10; i++) {
-        const row = document.createElement('tr');
-        row.className = 'listRow';
-        row.innerText = words[id][i];
-        table.appendChild(row);
-    }
-    display.appendChild(table);
-}
 
 function updateTimer() {
     leftTime--;
@@ -336,11 +339,11 @@ function collectAmount() {
     winGame.className = 'winGame';
     winGame.innerText = `Your Score is ${correctCount}`;
     const claim = document.createElement('div');
-    claim.className = 'claim';
+    claim.className = 'option1';
     claim.innerText = 'Claim';
     winGame.appendChild(claim);
     const addToWallet = document.createElement('div');
-    addToWallet.className = 'addToWallet';
+    addToWallet.className = 'option2';
     addToWallet.innerText = 'Add to Wallet';
     winGame.appendChild(addToWallet);
     document.body.appendChild(winGame);
@@ -395,7 +398,7 @@ document.querySelector('.container').addEventListener('click', function (e) {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+function initialize() {
     if (accountNumber === "") {
         let acc = setTimeout(() => {
             document.querySelector('.category').classList.add('blur-background');
@@ -420,6 +423,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }, 1000);
     }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initialize();
 });
 
 async function processAddress() {
@@ -436,7 +443,6 @@ async function processAddress() {
         alert("Non-Ethereum browser detected. You should consider trying MetaMask!");
     }
     else {
-        const enter = document.querySelector(".enter");
         enter.innerText = "Account No.: " + accountNumber[0] + accountNumber[1] + accountNumber[2] + "..." + accountNumber[40] + accountNumber[41];
     }
 }
@@ -455,8 +461,8 @@ async function balance() {
         alert("Something Wrong!");
     }
     else {
-        const enter = document.querySelector(".wallet");
-        enter.innerText = "Wallet: " + res.balance;
+        wallet.innerText = "Wallet: " + res.balance;
+        walletBalance = res.balance;
     }
 }
 
@@ -476,5 +482,98 @@ async function addToBalance() {
     else {
         const enter = document.querySelector(".wallet");
         enter.innerText = "Wallet: " + res.balance;
+        walletBalance = res.balance;
     }
 }
+
+wallet.addEventListener('mousedown', () => {
+    document.querySelector('.category').classList.add('blur-background');
+    display.classList.remove('active');
+    console.log(walletBalance);
+
+    if (walletBalance == 0) {
+        const winGame = document.createElement('div');
+        winGame.className = 'winGame';
+        winGame.innerText = `Wallet is empty`;
+        document.body.appendChild(winGame);
+        setTimeout(() => {
+            document.body.removeChild(winGame);
+            document.querySelector('.category').classList.remove('blur-background');
+        }, 1000)
+    }
+    else {
+        const winGame = document.createElement('div');
+        winGame.className = 'winGame';
+        winGame.innerText = `Claim ${walletBalance} Tokens`;
+        const claim = document.createElement('div');
+        claim.className = 'option1';
+        claim.innerText = 'Claim';
+        winGame.appendChild(claim);
+        const cancel = document.createElement('div');
+        cancel.className = 'option2';
+        cancel.innerText = 'Cancel';
+        winGame.appendChild(cancel);
+        document.body.appendChild(winGame);
+        claim.addEventListener('mousedown', async function () {
+            winGame.innerText = "Processing...";
+            const response = await fetch("http://localhost:5000/walletTransfer", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ points: walletBalance, address: accountNumber })
+            });
+
+            const res = await response.json();
+            if (res.valid == false) {
+                alert("Transaction failed. Try again after sometime!");
+                document.body.removeChild(winGame);
+                document.querySelector('.category').classList.remove('blur-background');
+            }
+            else {
+                winGame.innerHTML = '';
+                winGame.innerText = "Transaction Success!";
+                setTimeout(() => {
+                    document.body.removeChild(winGame);
+                    document.querySelector('.category').classList.remove('blur-background');
+                }, 1000)
+                const enter = document.querySelector(".wallet");
+                enter.innerText = "Wallet: 0";
+            }
+        })
+        cancel.addEventListener('mousedown', () => {
+            document.querySelector('.category').classList.remove('blur-background');
+            document.body.removeChild(winGame);
+        })
+    }
+})
+
+enter.addEventListener('mousedown', () => {
+    document.querySelector('.category').classList.add('blur-background');
+    display.classList.remove('active');
+    console.log(walletBalance);
+    const winGame = document.createElement('div');
+    winGame.className = 'winGame';
+    winGame.innerText = `Logout`;
+    const logout = document.createElement('div');
+    logout.className = 'option1';
+    logout.innerText = 'Logout';
+    winGame.appendChild(logout);
+    const cancel = document.createElement('div');
+    cancel.className = 'option2';
+    cancel.innerText = 'Cancel';
+    winGame.appendChild(cancel);
+    document.body.appendChild(winGame);
+    logout.addEventListener('mousedown', async function () {
+        accountNumber = "";
+        enter.innerText = "";
+        wallet.innerText = "";
+        document.querySelector('.category').classList.remove('blur-background');
+        document.body.removeChild(winGame);
+        initialize();
+    })
+    cancel.addEventListener('mousedown', () => {
+        document.querySelector('.category').classList.remove('blur-background');
+        document.body.removeChild(winGame);
+    })
+})
