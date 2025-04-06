@@ -146,7 +146,6 @@ function setup() {
     displayList(id);
 }
 
-
 function displayGrid() {
     display.innerHTML = '';
     display.appendChild(timer);
@@ -221,7 +220,6 @@ function addGridListener() {
             }
         });
 
-
         cell.addEventListener('mouseup', function (e) {
             e.preventDefault();
             if (isPressed) {
@@ -230,7 +228,7 @@ function addGridListener() {
                 reset();
             }
         });
-    })
+    });
 
     document.querySelector('.grid').addEventListener('mouseleave', function (e) {
         e.preventDefault();
@@ -268,7 +266,7 @@ function reset() {
 function clearSelection() {
     document.querySelectorAll('.cell.selected').forEach(cell => {
         if (!cell.classList.contains('found')) cell.classList.remove('selected');
-    })
+    });
 }
 
 function check() {
@@ -302,7 +300,6 @@ function coordinatesMatch(wordPos, selectedCoordinates) {
             col === selectedCoordinates[selectedCoordinates.length - 1 - i][1]);
 }
 
-
 function updateTimer() {
     leftTime--;
     let minute = Math.floor(leftTime / 60);
@@ -333,7 +330,7 @@ function checkwin() {
     }
 }
 
-function collectAmount() {
+async function collectAmount() {
     display.classList.remove('active');
     const winGame = document.createElement('div');
     winGame.className = 'winGame';
@@ -347,6 +344,7 @@ function collectAmount() {
     addToWallet.innerText = 'Add to Wallet';
     winGame.appendChild(addToWallet);
     document.body.appendChild(winGame);
+
     claim.addEventListener('mousedown', async function () {
         winGame.innerText = "Processing...";
         const response = await fetch("http://localhost:5000/transfer", {
@@ -359,25 +357,29 @@ function collectAmount() {
 
         const res = await response.json();
         if (res.valid == false) {
-            alert("Transaction failed. Tokens added to your wallet. Collect it from your wallet after some time.!");
-            addToBalance()
-        }
-        else {
+            alert("Transaction failed. Tokens added to your wallet. Collect it from your wallet after some time!");
+            addToBalance();
+        } else {
             winGame.innerHTML = '';
-            winGame.innerText = "Transaction Success!";
+            if (correctCount === 10) {
+                winGame.innerText = "Transaction Success! You’ve earned an NFT!";
+            } else {
+                winGame.innerText = "Transaction Success!";
+            }
             setTimeout(() => {
                 document.body.removeChild(winGame);
                 document.querySelector('.category').classList.remove('blur-background');
-            }, 1000)
+            }, 2000);
         }
-    })
+    });
+
     addToWallet.addEventListener('mousedown', () => {
-        addToBalance()
+        addToBalance();
         setTimeout(() => {
             document.body.removeChild(winGame);
             document.querySelector('.category').classList.remove('blur-background');
-        }, 1000)
-    })
+        }, 1000);
+    });
 }
 
 function gameStart() {
@@ -420,7 +422,6 @@ function initialize() {
                 processAddress();
                 balance();
             });
-
         }, 1000);
     }
 }
@@ -441,8 +442,7 @@ async function processAddress() {
     const res = await response.json();
     if (res.valid == false) {
         alert("Non-Ethereum browser detected. You should consider trying MetaMask!");
-    }
-    else {
+    } else {
         enter.innerText = "Account No.: " + accountNumber[0] + accountNumber[1] + accountNumber[2] + "..." + accountNumber[40] + accountNumber[41];
     }
 }
@@ -459,8 +459,7 @@ async function balance() {
     const res = await response.json();
     if (res.valid == false) {
         alert("Something Wrong!");
-    }
-    else {
+    } else {
         wallet.innerText = "Wallet: " + res.balance;
         walletBalance = res.balance;
     }
@@ -478,8 +477,7 @@ async function addToBalance() {
     const res = await response.json();
     if (res.valid == false) {
         alert("Something Wrong!");
-    }
-    else {
+    } else {
         const enter = document.querySelector(".wallet");
         enter.innerText = "Wallet: " + res.balance;
         walletBalance = res.balance;
@@ -499,9 +497,8 @@ wallet.addEventListener('mousedown', () => {
         setTimeout(() => {
             document.body.removeChild(winGame);
             document.querySelector('.category').classList.remove('blur-background');
-        }, 1000)
-    }
-    else {
+        }, 1000);
+    } else {
         const winGame = document.createElement('div');
         winGame.className = 'winGame';
         winGame.innerText = `Claim ${walletBalance} Tokens`;
@@ -529,24 +526,23 @@ wallet.addEventListener('mousedown', () => {
                 alert("Transaction failed. Try again after sometime!");
                 document.body.removeChild(winGame);
                 document.querySelector('.category').classList.remove('blur-background');
-            }
-            else {
+            } else {
                 winGame.innerHTML = '';
                 winGame.innerText = "Transaction Success!";
                 setTimeout(() => {
                     document.body.removeChild(winGame);
                     document.querySelector('.category').classList.remove('blur-background');
-                }, 1000)
+                }, 1000);
                 const enter = document.querySelector(".wallet");
                 enter.innerText = "Wallet: 0";
             }
-        })
+        });
         cancel.addEventListener('mousedown', () => {
             document.querySelector('.category').classList.remove('blur-background');
             document.body.removeChild(winGame);
-        })
+        });
     }
-})
+});
 
 enter.addEventListener('mousedown', () => {
     document.querySelector('.category').classList.add('blur-background');
@@ -571,9 +567,9 @@ enter.addEventListener('mousedown', () => {
         document.querySelector('.category').classList.remove('blur-background');
         document.body.removeChild(winGame);
         initialize();
-    })
+    });
     cancel.addEventListener('mousedown', () => {
         document.querySelector('.category').classList.remove('blur-background');
         document.body.removeChild(winGame);
-    })
-})
+    });
+});
