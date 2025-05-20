@@ -275,16 +275,17 @@ def wallet_transfer():
                 ),
                 400,
             )
+        # Calculate transfer amount directly (match perCorrect = 1e15 from contract)
+        total_amount = points * 10**15  # perCorrect = 1e15 in contract
+        logger.info(f"Transfer amount for {points} points: {total_amount}")
         nonce = w3.eth.get_transaction_count(my_address)
-        total_amount = transfer_contract.functions.fund(points).call()
-        logger.info(f"Fund amount for {points} points: {total_amount}")
         tx = {
             "from": my_address,
             "to": w3.to_checksum_address(recipient_address),
             "value": total_amount,
             "nonce": nonce,
             "chainId": chain_id,
-            "gas": 1000000,
+            "gas": 21000,  # Standard gas for Ether transfer
             "gasPrice": w3.to_wei("20", "gwei"),
         }
         signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
@@ -304,7 +305,7 @@ def wallet_transfer():
         )
         connection.commit()
         logger.info(f"Reset balance to 0 for {recipient_address}")
-        return jsonify({"valid": True, "message": "Successfully sent"})
+        return jsonify({"valid": True, "message": "Successfully sent Ether"})
     except Exception as e:
         logger.error(f"Error in /walletTransfer: {e}", exc_info=True)
         return jsonify({"valid": False, "message": str(e)}), 500
@@ -332,48 +333,57 @@ def transfer():
                 ),
                 400,
             )
-        nonce = w3.eth.get_transaction_count(my_address)
-        total_amount = transfer_contract.functions.fund(points).call()
-        logger.info(f"Fund amount for {points} points: {total_amount}")
-        tx = {
-            "from": my_address,
-            "to": w3.to_checksum_address(recipient_address),
-            "value": total_amount,
-            "nonce": nonce,
-            "chainId": chain_id,
-            "gas": 1000000,
-            "gasPrice": w3.to_wei("20", "gwei"),
-        }
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        logger.info(f"Transaction sent: {tx_hash.hex()}")
-        receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-        if receipt.status == 0:
-            logger.error("Transaction failed")
-            return jsonify({"valid": False, "message": "Transaction failed"}), 500
         if points == 10:
+            # Use awardCompletion for points == 10 to transfer Ether and mint NFT
             token_uri = f"https://ipfs.io/ipfs/QmMockHash/{recipient_address}/{points}"
             logger.info(
-                f"Awarding NFT to {recipient_address} with tokenURI: {token_uri}"
+                f"Calling awardCompletion for {recipient_address} with points: {points}"
             )
-            nft_tx = nft_contract.functions.awardNFT(
-                w3.to_checksum_address(recipient_address), token_uri
+            nonce = w3.eth.get_transaction_count(my_address)
+            tx = transfer_contract.functions.awardCompletion(
+                w3.to_checksum_address(recipient_address), points, token_uri
             ).build_transaction(
                 {
                     "from": my_address,
-                    "nonce": nonce + 1,
+                    "nonce": nonce,
                     "chainId": chain_id,
-                    "gas": 1000000,
+                    "gas": 2000000,  # Increased gas for complex function
                     "gasPrice": w3.to_wei("20", "gwei"),
                 }
             )
-            signed_nft_tx = w3.eth.account.sign_transaction(
-                nft_tx, private_key=private_key
+            signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            logger.info(f"Transaction sent: {tx_hash.hex()}")
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+            if receipt.status == 0:
+                logger.error("Transaction failed")
+                return jsonify({"valid": False, "message": "Transaction failed"}), 500
+            logger.info(f"NFT and Ether transferred to {recipient_address}")
+            return jsonify(
+                {"valid": True, "message": "Successfully sent NFT and Ether"}
             )
-            nft_tx_hash = w3.eth.send_raw_transaction(signed_nft_tx.rawTransaction)
-            logger.info(f"NFT transaction sent: {nft_tx_hash.hex()}")
-            w3.eth.wait_for_transaction_receipt(nft_tx_hash)
-        return jsonify({"valid": True, "message": "Successfully sent"})
+        else:
+            # Handle non-10 points case (direct Ether transfer)
+            total_amount = points * 10**15  # Match perCorrect = 1e15 from contract
+            logger.info(f"Transfer amount for {points} points: {total_amount}")
+            nonce = w3.eth.get_transaction_count(my_address)
+            tx = {
+                "from": my_address,
+                "to": w3.to_checksum_address(recipient_address),
+                "value": total_amount,
+                "nonce": nonce,
+                "chainId": chain_id,
+                "gas": 21000,  # Standard gas for Ether transfer
+                "gasPrice": w3.to_wei("20", "gwei"),
+            }
+            signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            logger.info(f"Transaction sent: {tx_hash.hex()}")
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+            if receipt.status == 0:
+                logger.error("Transaction failed")
+                return jsonify({"valid": False, "message": "Transaction failed"}), 500
+            return jsonify({"valid": True, "message": "Successfully sent Ether"})
     except Exception as e:
         logger.error(f"Error in /transfer: {e}", exc_info=True)
         return jsonify({"valid": False, "message": str(e)}), 500

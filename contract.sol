@@ -35,35 +35,6 @@ contract WordHuntNFT is ERC721, ERC721URIStorage {
     }
 }
 
-// contract transfer {
-//     uint256 public perCorrect = 1e15;
-//     mapping(address => uint256) public sender;
-//     address from;
-//     address to;
-//     WordHuntNFT public nftContract;
-
-//     constructor(address _nftContractAddress) {
-//         nftContract = WordHuntNFT(_nftContractAddress);
-//     }
-
-//     function senderAdd(address s) public {
-//         from = s;
-//     }
-
-//     function receiverAdd(address s) public {
-//         to = s;
-//     }
-
-//     function fund(uint256 points) public view returns (uint256) {
-//         uint256 transferEth = points * perCorrect;
-//         return transferEth;
-//     }
-
-//     function awardNFT(address player, string memory tokenURI_) public {
-//         nftContract.mintNFT(player, tokenURI_);
-//     }
-// }
-
 contract transfer {
     uint256 public perCorrect = 1e15;
     mapping(address => uint256) public sender;
@@ -93,9 +64,10 @@ contract transfer {
     ) public {
         require(amount <= address(this).balance, "Contract lacks funds");
         require(msg.sender == player, "Only player can spend");
-        payable(player).transfer(amount); // Refund for simplicity; adjust logic for real spending
+        payable(player).transfer(amount);
         emit CoinSpent(player, amount, item);
     }
+
     event CoinSpent(address indexed player, uint256 amount, string item);
 
     function deposit() public payable {}

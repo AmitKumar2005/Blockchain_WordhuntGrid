@@ -360,11 +360,11 @@ async function collectAmount() {
             const res = await response.json();
             if (!response.ok) {
                 console.error(`Transfer failed: ${response.status} ${response.statusText}`, res);
-                alert(`Transaction failed: ${res.message || res.error || 'Unknown error'} (Status: ${response.status}). Tokens added to wallet.`);
+                alert(`Failed to claim reward: ${res.message || res.error || 'Unable to process transaction. Please try again later.'}. Points added to wallet.`);
                 await addToBalance();
             } else {
                 winGame.innerHTML = '';
-                winGame.innerText = correctCount === 10 ? "Transaction Success! You've earned an NFT!" : "Transaction Success!";
+                winGame.innerText = correctCount === 10 ? "Success! You've earned an NFT and Ether!" : "Success! Ether transferred!";
                 setTimeout(() => {
                     document.body.removeChild(winGame);
                     document.querySelector('.category').classList.remove('blur-background');
@@ -372,7 +372,8 @@ async function collectAmount() {
             }
         } catch (error) {
             console.error("Error in collectAmount:", error);
-            alert(`Failed to process transaction: ${error.message || 'Network error'}`);
+            alert(`Failed to claim reward: ${error.message || 'Network error'}. Points added to wallet.`);
+            await addToBalance();
         }
     });
 
@@ -546,9 +547,9 @@ wallet.addEventListener('mousedown', () => {
                 const res = await response.json();
                 if (!response.ok) {
                     console.error(`Wallet transfer failed: ${response.status} ${response.statusText}`, res);
-                    alert(`Transaction failed: ${res.message || res.error || 'Unknown error'} (Status: ${response.status})`);
+                    alert(`Failed to claim tokens: ${res.message || res.error || 'Unable to process transaction. Please try again later.'} (Status: ${response.status})`);
                 } else {
-                    winGame.innerText = "Transaction Success!";
+                    winGame.innerText = "Success! Tokens transferred!";
                     wallet.innerText = "Wallet: 0";
                     walletBalance = 0;
                     setTimeout(() => {
