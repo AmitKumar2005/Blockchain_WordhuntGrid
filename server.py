@@ -3,7 +3,7 @@ import os
 import json
 import mysql.connector
 from mysql.connector import Error
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 from web3 import Web3
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 CORS(
     app,
     origins=["https://blockchain-wordhuntgrid.onrender.com", "http://localhost:3000"],
@@ -28,6 +28,7 @@ if ALCHEMY_URL:
     logger.info(f"Connected to Web3: {w3.is_connected()}")
 else:
     logger.error("ALCHEMY_URL not set")
+    raise ValueError("ALCHEMY_URL not set")
 
 # Load contract data
 try:
@@ -69,7 +70,7 @@ DB_CONFIG = {
     "user": os.getenv("USER"),
     "password": os.getenv("PASSWORD"),
     "database": os.getenv("DATABASE"),
-    "port": 4000,  # Add database port
+    "port": 4000,
 }
 
 
@@ -77,18 +78,39 @@ def get_db_connection():
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
         if connection.is_connected():
-            logger.info("Successfully connected to MySQL database")
+            logger.info("Connected to MySQL database")
             return connection
-        else:
-            logger.error("MySQL connection established but not connected")
-            return None
-    except Error as e:
-        logger.error(f"Database connection failed: {e} - Config: {DB_CONFIG}")
+        logger.error("MySQL connection established but not connected")
         return None
+    except Error as e:
+        logger.error(f"Database connection failed: {e}")
+        return None
+
+
+# Test database connection on startup
+try:
+    connection = get_db_connection()
+    if connection:
+        logger.info("Database connection successful on startup")
+        connection.close()
+    else:
+        logger.error("Database connection failed on startup")
+except Exception as e:
+    logger.error(f"Database startup check failed: {e}")
 
 
 @app.route("/")
 def index():
+    return send_from_directory(app.static_folder, "index.html")
+
+
+@app.route("/<path:path>")
+def serve_static(path):
+    return send_from_directory(app.static_folder, path)
+
+
+@app.route("/api", methods=["GET"])
+def api_index():
     return (
         jsonify(
             {
@@ -103,14 +125,12 @@ def index():
 
 @app.route("/balance", methods=["POST"])
 def get_balance():
+    connection = None
     try:
         data = request.get_json()
-        logger.info(f"Received /balance request: {data}")
+        logger.info(f"/balance request: {data}")
         address = data.get("address", "")
-        if not address:
-            logger.error("Address is required")
-            return jsonify({"valid": False, "error": "Address is required"}), 400
-        if not is_valid_ethereum_address(address):
+        if not address or not is_valid_ethereum_address(address):
             logger.error(f"Invalid Ethereum address: {address}")
             return jsonify({"valid": False, "error": "Invalid Ethereum address"}), 400
         connection = get_db_connection()
@@ -124,13 +144,12 @@ def get_balance():
             balance = result[0]
             logger.info(f"Balance for {address}: {balance}")
             return jsonify({"valid": True, "balance": balance})
-        else:
-            logger.info(f"No balance found for {address}, inserting new record")
-            cursor.execute(
-                "INSERT INTO token (accNo, balance) VALUES (%s, %s)", (address, 0)
-            )
-            connection.commit()
-            return jsonify({"valid": True, "balance": 0})
+        logger.info(f"No balance for {address}, inserting 0")
+        cursor.execute(
+            "INSERT INTO token (accNo, balance) VALUES (%s, %s)", (address, 0)
+        )
+        connection.commit()
+        return jsonify({"valid": True, "balance": 0})
     except Exception as e:
         logger.error(f"Error in /balance: {e}", exc_info=True)
         return jsonify({"valid": False, "error": str(e)}), 500
@@ -142,19 +161,17 @@ def get_balance():
 
 @app.route("/addToBalance", methods=["POST"])
 def add_balance():
+    connection = None
     try:
         data = request.get_json()
-        logger.info(f"Received /addToBalance request: {data}")
+        logger.info(f"/addToBalance request: {data}")
         address = data.get("address", "")
         points = data.get("points", 0)
-        if not address:
-            logger.error("Address is required")
-            return jsonify({"valid": False, "error": "Address is required"}), 400
-        if not is_valid_ethereum_address(address):
+        if not address or not is_valid_ethereum_address(address):
             logger.error(f"Invalid Ethereum address: {address}")
             return jsonify({"valid": False, "error": "Invalid Ethereum address"}), 400
         if not isinstance(points, int) or points < 0:
-            logger.error(f"Invalid points value: {points}")
+            logger.error(f"Invalid points: {points}")
             return (
                 jsonify(
                     {"valid": False, "error": "Points must be a non-negative integer"}
@@ -169,7 +186,7 @@ def add_balance():
         cursor.execute("SELECT balance FROM token WHERE accNo = %s", (address,))
         result = cursor.fetchone()
         if not result:
-            logger.info(f"No balance found for {address}, inserting new record")
+            logger.info(f"No balance for {address}, inserting {points}")
             cursor.execute(
                 "INSERT INTO token (accNo, balance) VALUES (%s, %s)", (address, points)
             )
@@ -203,43 +220,43 @@ def is_valid_ethereum_address(address):
 
 
 @app.route("/verifyAddress", methods=["POST"])
-def verifyAddress():
+def verify_address():
     try:
         data = request.get_json()
-        logger.info(f"Received /verifyAddress request: {data}")
+        logger.info(f"/verifyAddress request: {data}")
         address = data.get("address", "")
         if not is_valid_ethereum_address(address):
             logger.error(f"Invalid Ethereum address: {address}")
-            return jsonify({"valid": False, "message": "Invalid Ethereum address"})
+            return jsonify({"valid": False, "message": "Invalid Ethereum address"}), 400
         logger.info(f"Valid Ethereum address: {address}")
         return jsonify({"valid": True, "message": "Connected"})
     except Exception as e:
         logger.error(f"Error in /verifyAddress: {e}", exc_info=True)
-        return jsonify({"valid": False, "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"valid": False, "message": str(e)}), 500
 
 
 @app.route("/walletTransfer", methods=["POST"])
-def walletTransfer():
+def wallet_transfer():
     connection = None
     try:
         data = request.get_json()
-        logger.info(f"Received /walletTransfer request: {data}")
+        logger.info(f"/walletTransfer request: {data}")
         points = data.get("points", 0)
         recipient_address = data.get("address", "")
         if not is_valid_ethereum_address(recipient_address):
-            logger.error(f"Invalid recipient Ethereum address: {recipient_address}")
-            return jsonify(
-                {"valid": False, "message": "Invalid recipient Ethereum address"}
-            )
+            logger.error(f"Invalid recipient address: {recipient_address}")
+            return jsonify({"valid": False, "message": "Invalid Ethereum address"}), 400
         if not isinstance(points, int) or points <= 0:
-            logger.error(f"Invalid points value: {points}")
-            return jsonify(
-                {"valid": False, "message": "Points must be a positive integer"}
+            logger.error(f"Invalid points: {points}")
+            return (
+                jsonify(
+                    {"valid": False, "message": "Points must be a positive integer"}
+                ),
+                400,
             )
         nonce = w3.eth.get_transaction_count(my_address)
-        logger.info(f"Calling fund({points}) for {recipient_address}, nonce: {nonce}")
         total_amount = transfer_contract.functions.fund(points).call()
-        logger.info(f"Fund amount: {total_amount}")
+        logger.info(f"Fund amount for {points} points: {total_amount}")
         tx = {
             "from": my_address,
             "to": w3.to_checksum_address(recipient_address),
@@ -255,7 +272,7 @@ def walletTransfer():
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         if receipt.status == 0:
             logger.error("Transaction failed")
-            return jsonify({"valid": False, "message": "Unsuccessful Transaction"})
+            return jsonify({"valid": False, "message": "Transaction failed"}), 500
         connection = get_db_connection()
         if not connection:
             logger.error("DB connection failed")
@@ -269,7 +286,7 @@ def walletTransfer():
         return jsonify({"valid": True, "message": "Successfully sent"})
     except Exception as e:
         logger.error(f"Error in /walletTransfer: {e}", exc_info=True)
-        return jsonify({"valid": False, "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"valid": False, "message": str(e)}), 500
     finally:
         if connection and connection.is_connected():
             cursor.close()
@@ -277,26 +294,26 @@ def walletTransfer():
 
 
 @app.route("/transfer", methods=["POST"])
-def transferMoney():
+def transfer():
     try:
         data = request.get_json()
-        logger.info(f"Received /transfer request: {data}")
+        logger.info(f"/transfer request: {data}")
         points = data.get("points", 0)
         recipient_address = data.get("address", "")
         if not is_valid_ethereum_address(recipient_address):
-            logger.error(f"Invalid recipient Ethereum address: {recipient_address}")
-            return jsonify(
-                {"valid": False, "message": "Invalid recipient Ethereum address"}
-            )
+            logger.error(f"Invalid recipient address: {recipient_address}")
+            return jsonify({"valid": False, "message": "Invalid Ethereum address"}), 400
         if not isinstance(points, int) or points <= 0:
-            logger.error(f"Invalid points value: {points}")
-            return jsonify(
-                {"valid": False, "message": "Points must be a positive integer"}
+            logger.error(f"Invalid points: {points}")
+            return (
+                jsonify(
+                    {"valid": False, "message": "Points must be a positive integer"}
+                ),
+                400,
             )
         nonce = w3.eth.get_transaction_count(my_address)
-        logger.info(f"Calling fund({points}) for {recipient_address}, nonce: {nonce}")
         total_amount = transfer_contract.functions.fund(points).call()
-        logger.info(f"Fund amount: {total_amount}")
+        logger.info(f"Fund amount for {points} points: {total_amount}")
         tx = {
             "from": my_address,
             "to": w3.to_checksum_address(recipient_address),
@@ -312,13 +329,13 @@ def transferMoney():
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         if receipt.status == 0:
             logger.error("Transaction failed")
-            return jsonify({"valid": False, "message": "Unsuccessful Transaction"})
+            return jsonify({"valid": False, "message": "Transaction failed"}), 500
         if points == 10:
             token_uri = f"https://ipfs.io/ipfs/QmMockHash/{recipient_address}/{points}"
             logger.info(
                 f"Awarding NFT to {recipient_address} with tokenURI: {token_uri}"
             )
-            nft_tx = transfer_contract.functions.awardNFT(
+            nft_tx = nft_contract.functions.awardNFT(
                 w3.to_checksum_address(recipient_address), token_uri
             ).build_transaction(
                 {
@@ -338,7 +355,7 @@ def transferMoney():
         return jsonify({"valid": True, "message": "Successfully sent"})
     except Exception as e:
         logger.error(f"Error in /transfer: {e}", exc_info=True)
-        return jsonify({"valid": False, "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"valid": False, "message": str(e)}), 500
 
 
 if __name__ == "__main__":

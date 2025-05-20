@@ -253,7 +253,7 @@ function isValidDirection(initx, inity, curx, cury, coordinates) {
         return dx === len || dx === -len;
     }
     else if (Math.abs(dx) === Math.abs(dy)) {
-        return (dx === len && dy === len) || (dx === -len && dy === -len) || (dx === len && dy === -len) || (dx === -len && dy === len);
+        return (dx === len Qi && dy === len) || (dx === -len && dy === -len) || (dx === len && dy === -len) || (dx === -len && dy === len);
     }
     return false;
 }
@@ -350,41 +350,41 @@ async function collectAmount() {
     claim.addEventListener('mousedown', async function () {
         winGame.innerText = "Processing...";
         try {
+            console.log("Sending /transfer request:", { points: correctCount, address: accountNumber });
             const response = await fetch(`${API_URL}/transfer`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ points: correctCount, address: accountNumber })
             });
+            console.log("Response:", response.status, response.statusText);
             const res = await response.json();
-            if (res.valid == false) {
-                alert("Transaction failed. Tokens added to your wallet. Collect it from your wallet after some time!");
-                addToBalance();
+            if (!res.valid) {
+                console.error("Transfer failed:", res);
+                alert(`Transaction failed: ${res.message || res.error || 'Unknown error'}. Tokens added to wallet.`);
+                await addToBalance();
             } else {
                 winGame.innerHTML = '';
-                if (correctCount === 10) {
-                    winGame.innerText = "Transaction Success! You’ve earned an NFT!";
-                } else {
-                    winGame.innerText = "Transaction Success!";
-                }
+                winGame.innerText = correctCount === 10 ? "Transaction Success! You've earned an NFT!" : "Transaction Success!";
                 setTimeout(() => {
                     document.body.removeChild(winGame);
                     document.querySelector('.category').classList.remove('blur-background');
                 }, 2000);
             }
         } catch (error) {
-            console.error("Fetch error in collectAmount:", error);
-            alert("Failed to process transaction. Please try again.");
+            console.error("Error in collectAmount:", error);
+            alert(`Failed to process transaction: ${error.message || 'Network error'}`);
         }
     });
 
-    addToWallet.addEventListener('mousedown', () => {
-        addToBalance();
-        setTimeout(() => {
+    addToWallet.addEventListener('mousedown', async () => {
+        try {
+            await addToBalance();
             document.body.removeChild(winGame);
             document.querySelector('.category').classList.remove('blur-background');
-        }, 1000);
+        } catch (error) {
+            console.error("Error in addToWallet:", error);
+            alert(`Failed to add to wallet: ${error.message || 'Network error'}`);
+        }
     });
 }
 
@@ -408,7 +408,7 @@ document.querySelector('.container').addEventListener('click', function (e) {
 
 function initialize() {
     if (accountNumber === "") {
-        let acc = setTimeout(() => {
+        setTimeout(() => {
             document.querySelector('.category').classList.add('blur-background');
             metamaskAccount.classList.add('accountNo');
             metamaskAccount.innerHTML = `
@@ -418,7 +418,6 @@ function initialize() {
                     <button type="submit" class="accSubmit">Submit</button>
                 </form>
             `;
-
             document.querySelector('.accForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 accountNumber = document.querySelector('.accountInput').value;
@@ -438,74 +437,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function processAddress() {
     try {
+        console.log("Sending /verifyAddress request:", { address: accountNumber });
         const response = await fetch(`${API_URL}/verifyAddress`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: accountNumber })
         });
+        console.log("Response:", response.status, response.statusText);
         const res = await response.json();
-        if (res.valid == false) {
-            alert("Non-Ethereum browser detected. You should consider trying MetaMask!");
+        if (!res.valid) {
+            console.error("Verify address failed:", res);
+            alert(`Non-Ethereum browser detected or invalid address: ${res.message || res.error || 'Unknown error'}`);
+            accountNumber = "";
+            initialize();
         } else {
-            enter.innerText = "Account No.: " + accountNumber.slice(0, 3) + "..." + accountNumber.slice(-2);
+            enter.innerText = `Account: ${accountNumber.slice(0, 4)}...${accountNumber.slice(-4)}`;
         }
     } catch (error) {
-        console.error("Fetch error in processAddress:", error);
-        alert("Failed to verify address. Please try again.");
+        console.error("Error in processAddress:", error);
+        alert(`Failed to verify address: ${error.message || 'Network error'}`);
+        accountNumber = "";
+        initialize();
     }
 }
 
 async function balance() {
     try {
+        console.log("Sending /balance request:", { address: accountNumber });
         const response = await fetch(`${API_URL}/balance`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: accountNumber })
         });
+        console.log("Response:", response.status, response.statusText);
         const res = await response.json();
-        if (res.valid == false) {
-            alert("Something Wrong!");
+        if (!res.valid) {
+            console.error("Balance fetch failed:", res);
+            alert(`Failed to fetch balance: ${res.error || res.message || 'Unknown error'}`);
         } else {
-            wallet.innerText = "Wallet: " + res.balance;
+            wallet.innerText = `Wallet: ${res.balance}`;
             walletBalance = res.balance;
         }
     } catch (error) {
-        console.error("Fetch error in balance:", error);
-        alert("Failed to fetch balance. Please try again.");
+        console.error("Error in balance:", error);
+        alert(`Failed to fetch balance: ${error.message || 'Network error'}`);
     }
 }
 
 async function addToBalance() {
     try {
+        console.log("Sending /addToBalance request:", { address: accountNumber, points: correctCount });
         const response = await fetch(`${API_URL}/addToBalance`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: accountNumber, points: correctCount })
         });
+        console.log("Response:", response.status, response.statusText);
         const res = await response.json();
-        if (res.valid == false) {
-            alert("Something Wrong!");
+        if (!res.valid) {
+            console.error("Add to balance failed:", res);
+            alert(`Failed to add to balance: ${res.error || res.message || 'Unknown error'}`);
         } else {
-            const enter = document.querySelector(".wallet");
-            enter.innerText = "Wallet: " + res.balance;
+            wallet.innerText = `Wallet: ${res.balance}`;
             walletBalance = res.balance;
         }
     } catch (error) {
-        console.error("Fetch error in addToBalance:", error);
-        alert("Failed to add to balance. Please try again.");
+        console.error("Error in addToBalance:", error);
+        alert(`Failed to add to balance: ${error.message || 'Network error'}`);
     }
 }
 
 wallet.addEventListener('mousedown', () => {
     document.querySelector('.category').classList.add('blur-background');
     display.classList.remove('active');
-    console.log(walletBalance);
 
     if (walletBalance == 0) {
         const winGame = document.createElement('div');
@@ -532,36 +536,34 @@ wallet.addEventListener('mousedown', () => {
         claim.addEventListener('mousedown', async function () {
             winGame.innerText = "Processing...";
             try {
+                console.log("Sending /walletTransfer request:", { points: walletBalance, address: accountNumber });
                 const response = await fetch(`${API_URL}/walletTransfer`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ points: walletBalance, address: accountNumber })
                 });
+                console.log("Response:", response.status, response.statusText);
                 const res = await response.json();
-                if (res.valid == false) {
-                    alert("Transaction failed. Try again after sometime!");
-                    document.body.removeChild(winGame);
-                    document.querySelector('.category').classList.remove('blur-background');
+                if (!res.valid) {
+                    console.error("Wallet transfer failed:", res);
+                    alert(`Transaction failed: ${res.message || res.error || 'Unknown error'}`);
                 } else {
-                    winGame.innerHTML = '';
                     winGame.innerText = "Transaction Success!";
+                    wallet.innerText = "Wallet: 0";
+                    walletBalance = 0;
                     setTimeout(() => {
                         document.body.removeChild(winGame);
                         document.querySelector('.category').classList.remove('blur-background');
                     }, 1000);
-                    const enter = document.querySelector(".wallet");
-                    enter.innerText = "Wallet: 0";
                 }
             } catch (error) {
-                console.error("Fetch error in walletTransfer:", error);
-                alert("Failed to process wallet transfer. Please try again.");
+                console.error("Error in walletTransfer:", error);
+                alert(`Failed to process wallet transfer: ${error.message || 'Network error'}`);
             }
         });
         cancel.addEventListener('mousedown', () => {
-            document.querySelector('.category').classList.remove('blur-background');
             document.body.removeChild(winGame);
+            document.querySelector('.category').classList.remove('blur-background');
         });
     }
 });
@@ -569,7 +571,6 @@ wallet.addEventListener('mousedown', () => {
 enter.addEventListener('mousedown', () => {
     document.querySelector('.category').classList.add('blur-background');
     display.classList.remove('active');
-    console.log(walletBalance);
     const winGame = document.createElement('div');
     winGame.className = 'winGame';
     winGame.innerText = `Logout`;
@@ -582,16 +583,17 @@ enter.addEventListener('mousedown', () => {
     cancel.innerText = 'Cancel';
     winGame.appendChild(cancel);
     document.body.appendChild(winGame);
-    logout.addEventListener('mousedown', async function () {
+    logout.addEventListener('mousedown', () => {
         accountNumber = "";
         enter.innerText = "";
-        wallet.innerText = "";
-        document.querySelector('.category').classList.remove('blur-background');
+        wallet.innerText = "Wallet: 0";
+        walletBalance = 0;
         document.body.removeChild(winGame);
+        document.querySelector('.category').classList.remove('blur-background');
         initialize();
     });
     cancel.addEventListener('mousedown', () => {
-        document.querySelector('.category').classList.remove('blur-background');
         document.body.removeChild(winGame);
+        document.querySelector('.category').classList.remove('blur-background');
     });
 });
