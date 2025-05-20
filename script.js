@@ -34,8 +34,7 @@ let str = "";
 let initx = -1;
 let inity = -1;
 
-// Use environment variable or replace with Render backend URL after deployment
-const API_URL = process.env.REACT_APP_API_URL || "https://blockchain-wordhuntgrid.onrender.com";
+const API_URL = "https://blockchain-wordhuntgrid.onrender.com";
 
 const n = 11, m = 15;
 const grid = new Array(n).fill().map(() => new Array(m).fill(-1));
