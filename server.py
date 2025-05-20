@@ -334,7 +334,9 @@ def transfer():
             )
         if points == 10:
             # Use awardCompletion for points == 10 to transfer Ether and mint NFT
-            token_uri = f"https://ipfs.io/ipfs/QmMockHash/{recipient_address}/{points}"
+            token_uri = (
+                "https://ipfs.io/ipfs/QmActualHash"  # Replace with your IPFS hash
+            )
             logger.info(
                 f"Calling awardCompletion for {recipient_address} with points: {points}, tokenURI: {token_uri}"
             )
@@ -362,7 +364,7 @@ def transfer():
                     "from": my_address,
                     "nonce": nonce,
                     "chainId": chain_id,
-                    "gas": gas + 10000,  # Add buffer
+                    "gas": gas + 10000,
                     "gasPrice": w3.to_wei("20", "gwei"),
                 }
             )

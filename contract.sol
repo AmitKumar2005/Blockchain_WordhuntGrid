@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract WordHuntNFT is ERC721, ERC721URIStorage {
     uint256 private _tokenIds;
@@ -35,14 +36,14 @@ contract WordHuntNFT is ERC721, ERC721URIStorage {
     }
 }
 
-contract transfer {
+contract transfer is Ownable {
     uint256 public perCorrect = 1e15;
     mapping(address => uint256) public sender;
     address from;
     address to;
     WordHuntNFT public nftContract;
 
-    constructor(address _nftContractAddress) {
+    constructor(address _nftContractAddress) Ownable(msg.sender) {
         nftContract = WordHuntNFT(_nftContractAddress);
     }
 
@@ -50,10 +51,34 @@ contract transfer {
         address player,
         uint256 points,
         string memory tokenURI_
-    ) public {
+    ) public onlyOwner {
         require(points == 10, "Must complete game (10 points)");
         uint256 transferEth = points * perCorrect;
+        require(
+            address(this).balance >= transferEth,
+            "Insufficient contract balance"
+        );
         payable(player).transfer(transferEth);
+        nftContract.mintNFT(player, tokenURI_);
+    }
+
+    function transferEtherOnly(
+        address player,
+        uint256 points
+    ) public onlyOwner {
+        require(points == 10, "Must complete game (10 points)");
+        uint256 transferEth = points * perCorrect;
+        require(
+            address(this).balance >= transferEth,
+            "Insufficient contract balance"
+        );
+        payable(player).transfer(transferEth);
+    }
+
+    function mintNFTOnly(
+        address player,
+        string memory tokenURI_
+    ) public onlyOwner {
         nftContract.mintNFT(player, tokenURI_);
     }
 

@@ -360,7 +360,7 @@ async function collectAmount() {
             const res = await response.json();
             if (!response.ok) {
                 console.error(`Transfer failed: ${response.status} ${response.statusText}`, res);
-                alert(`Failed to claim reward: ${res.message || res.error || 'Unable to process transaction. Please try again later.'}. Points added to wallet.`);
+                alert(`Failed to claim reward: ${res.message || res.error || 'Unable to process transaction'} (Status: ${response.status}). Points added to wallet.`);
                 await addToBalance();
             } else {
                 winGame.innerHTML = '';
@@ -372,7 +372,7 @@ async function collectAmount() {
             }
         } catch (error) {
             console.error("Error in collectAmount:", error);
-            alert(`Failed to claim reward: ${error.message || 'Network error'}. Points added to wallet.`);
+            alert(`Failed to claim reward: ${error.message || 'Network error'} (Status: Network Error). Points added to wallet.`);
             await addToBalance();
         }
     });
