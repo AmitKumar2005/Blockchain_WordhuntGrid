@@ -18,9 +18,13 @@ load_dotenv()
 install_solc("0.8.20")
 
 app = Flask(__name__)
-CORS(app, origins=["http://127.0.0.1:5500"], supports_credentials=True)
+CORS(
+    app,
+    origins=["https://blockchain-wordhuntgrid.onrender.com"],
+    supports_credentials=True,
+)
 
-Alchemy_URL = "https://eth-sepolia.g.alchemy.com/v2/pNASGYMf60h1z4fJpVgbgh_FMzO2iYoe"
+Alchemy_URL = os.getenv("ALCHEMY_URL")
 w3 = Web3(Web3.HTTPProvider(Alchemy_URL))
 logger.info(f"Connected to Web3: {w3.is_connected()}")
 
@@ -83,55 +87,12 @@ if not my_address or not private_key:
 my_address = w3.to_checksum_address(my_address)
 chain_id = 11155111
 
-nft_bytecode = compile_sol["contracts"]["contract.sol"]["WordHuntNFT"]["evm"][
-    "bytecode"
-]["object"]
+nft_address = os.getenv("NFT_CONTRACT_ADDRESS")
+cont_add = os.getenv("TRANSFER_CONTRACT_ADDRESS")
 nft_abi = compile_sol["contracts"]["contract.sol"]["WordHuntNFT"]["abi"]
-nft_contract = w3.eth.contract(bytecode=nft_bytecode, abi=nft_abi)
-
-nonce = w3.eth.get_transaction_count(my_address)
-logger.info(f"Nonce for {my_address}: {nonce}")
-
-nft_trans = nft_contract.constructor().build_transaction(
-    {
-        "from": my_address,
-        "nonce": nonce,
-        "chainId": chain_id,
-        # "gas": 2000000,
-        # "gasPrice": w3.to_wei("50", "gwei"),
-    }
-)
-sign_nft_trans = w3.eth.account.sign_transaction(nft_trans, private_key=private_key)
-send_nft_trans = w3.eth.send_raw_transaction(sign_nft_trans.raw_transaction)
-logger.info(f"WordHuntNFT transaction sent: {send_nft_trans.hex()}")
-receipt_nft_trans = w3.eth.wait_for_transaction_receipt(send_nft_trans)
-logger.info(f"WordHuntNFT deployed at: {receipt_nft_trans.contractAddress}")
-nft_address = receipt_nft_trans.contractAddress
-new_nft_contract = w3.eth.contract(address=nft_address, abi=nft_abi)
-
-bytecode = compile_sol["contracts"]["contract.sol"]["transfer"]["evm"]["bytecode"][
-    "object"
-]
 abi = compile_sol["contracts"]["contract.sol"]["transfer"]["abi"]
-nonce += 1
-contract = w3.eth.contract(bytecode=bytecode, abi=abi)
-trans = contract.constructor(nft_address).build_transaction(
-    {
-        "from": my_address,
-        "nonce": nonce,
-        "chainId": chain_id,
-        # "gas": 2000000,
-        # "gasPrice": w3.to_wei("50", "gwei"),
-    }
-)
-sign_trans = w3.eth.account.sign_transaction(trans, private_key=private_key)
-send_trans = w3.eth.send_raw_transaction(sign_trans.raw_transaction)
-logger.info(f"Transfer contract transaction sent: {send_trans.hex()}")
-receipt_trans = w3.eth.wait_for_transaction_receipt(send_trans)
-logger.info(f"Transfer contract deployed at: {receipt_trans.contractAddress}")
-cont_add = receipt_trans.contractAddress
+new_nft_contract = w3.eth.contract(address=nft_address, abi=nft_abi)
 new_cont = w3.eth.contract(address=cont_add, abi=abi)
-
 
 host = os.getenv("HOST")
 user = os.getenv("USER")
@@ -251,8 +212,6 @@ def walletTransfer():
             "value": total_amount,
             "nonce": nonce,
             "chainId": chain_id,
-            # "gas": 1000000,
-            # "gasPrice": w3.to_wei("20", "gwei")
         }
         sign_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
         send_tx = w3.eth.send_raw_transaction(sign_tx.raw_transaction)
@@ -324,8 +283,5 @@ def transferMoney():
 
 
 if __name__ == "__main__":
-    connection = get_db_connection()
-    if connection:
-        logger.info(f"Connected to MySQL Server version {connection.get_server_info()}")
-        connection.close()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
