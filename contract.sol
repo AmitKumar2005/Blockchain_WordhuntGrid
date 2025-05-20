@@ -51,7 +51,7 @@ contract transfer is Ownable {
         address player,
         uint256 points,
         string memory tokenURI_
-    ) public onlyOwner {
+    ) public payable onlyOwner {
         require(points == 10, "Must complete game (10 points)");
         uint256 transferEth = points * perCorrect;
         require(
