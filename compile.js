@@ -7,12 +7,21 @@ const source = fs.readFileSync(contractPath, "utf8");
 
 // Map OpenZeppelin imports
 const findImports = (importPath) => {
-    const fullPath = path.resolve(__dirname, "node_modules", importPath);
+    // Handle OpenZeppelin imports
+    if (importPath.startsWith("@openzeppelin/contracts/")) {
+        const fullPath = path.resolve(__dirname, "node_modules", importPath);
+        if (fs.existsSync(fullPath)) {
+            return { contents: fs.readFileSync(fullPath, "utf8") };
+        } else {
+            return { error: `File not found: ${fullPath}` };
+        }
+    }
+    // Handle other imports (if any)
+    const fullPath = path.resolve(__dirname, importPath);
     if (fs.existsSync(fullPath)) {
         return { contents: fs.readFileSync(fullPath, "utf8") };
-    } else {
-        return { error: "File not found: " + importPath };
     }
+    return { error: `File not found: ${importPath}` };
 };
 
 const input = {
@@ -28,26 +37,46 @@ const input = {
                 "*": ["abi", "evm.bytecode"],
             },
         },
+        remappings: [
+            "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/"
+        ],
     },
 };
 
-const output = JSON.parse(solc.compile(JSON.stringify(input), { import: findImports }));
+try {
+    const output = JSON.parse(solc.compile(JSON.stringify(input), { import: findImports }));
 
-const contracts = output.contracts["contract.sol"];
-if (!contracts) {
-    console.error("❌ Compilation failed:", output.errors || output);
-    process.exit(1);
-}
+    if (output.errors) {
+        console.error("❌ Compilation failed:");
+        output.errors.forEach((err) => {
+            console.error(err.formattedMessage || err.message);
+        });
+        process.exit(1);
+    }
 
-for (const name in contracts) {
-    const abi = contracts[name].abi;
-    const bytecode = contracts[name].evm.bytecode.object;
+    const contracts = output.contracts["contract.sol"];
+    if (!contracts) {
+        console.error("❌ No contracts found in compilation output");
+        process.exit(1);
+    }
+
+    const contractData = {};
+    for (const name in contracts) {
+        contractData[name] = {
+            abi: contracts[name].abi,
+            bytecode: contracts[name].evm.bytecode.object,
+        };
+        console.log(`✅ Compiled ${name}`);
+    }
 
     const outPath = path.resolve(__dirname, "contract_data.json");
     fs.writeFileSync(
         outPath,
-        JSON.stringify({ name, abi, bytecode }, null, 2),
+        JSON.stringify(contractData, null, 2),
         "utf8"
     );
-    console.log(`✅ Compiled ${name}, saved ABI and bytecode to contract_data.json`);
+    console.log(`✅ Saved ABI and bytecode for all contracts to ${outPath}`);
+} catch (error) {
+    console.error("❌ Compilation error:", error.message);
+    process.exit(1);
 }
