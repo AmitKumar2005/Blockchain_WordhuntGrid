@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder=".")
 CORS(
     app,
     origins=["https://blockchain-wordhuntgrid.onrender.com", "http://localhost:3000"],
@@ -101,12 +101,33 @@ except Exception as e:
 
 @app.route("/")
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+    logger.info("Serving index.html from root")
+    try:
+        return send_from_directory(app.static_folder, "index.html")
+    except FileNotFoundError:
+        logger.error("index.html not found in root")
+        return jsonify({"error": "index.html not found"}), 404
 
 
 @app.route("/<path:path>")
 def serve_static(path):
-    return send_from_directory(app.static_folder, path)
+    logger.info(f"Serving file from root: {path}")
+    try:
+        return send_from_directory(app.static_folder, path)
+    except FileNotFoundError:
+        logger.error(f"File not found: {path}")
+        return jsonify({"error": f"File {path} not found"}), 404
+
+
+@app.route("/debug/static-files", methods=["GET"])
+def list_static_files():
+    try:
+        files = os.listdir(app.static_folder)
+        logger.info(f"Root folder contents: {files}")
+        return jsonify({"static_files": files})
+    except Exception as e:
+        logger.error(f"Error listing root files: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api", methods=["GET"])

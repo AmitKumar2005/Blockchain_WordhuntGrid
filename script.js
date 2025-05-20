@@ -253,7 +253,7 @@ function isValidDirection(initx, inity, curx, cury, coordinates) {
         return dx === len || dx === -len;
     }
     else if (Math.abs(dx) === Math.abs(dy)) {
-        return (dx === len Qi && dy === len) || (dx === -len && dy === -len) || (dx === len && dy === -len) || (dx === -len && dy === len);
+        return (dx === len && dy === len) || (dx === -len && dy === -len) || (dx === len && dy === -len) || (dx === -len && dy === len);
     }
     return false;
 }
@@ -356,11 +356,11 @@ async function collectAmount() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ points: correctCount, address: accountNumber })
             });
-            console.log("Response:", response.status, response.statusText);
+            console.log(`Response: ${response.status} ${response.statusText}`);
             const res = await response.json();
-            if (!res.valid) {
-                console.error("Transfer failed:", res);
-                alert(`Transaction failed: ${res.message || res.error || 'Unknown error'}. Tokens added to wallet.`);
+            if (!response.ok) {
+                console.error(`Transfer failed: ${response.status} ${response.statusText}`, res);
+                alert(`Transaction failed: ${res.message || res.error || 'Unknown error'} (Status: ${response.status}). Tokens added to wallet.`);
                 await addToBalance();
             } else {
                 winGame.innerHTML = '';
@@ -410,7 +410,7 @@ function initialize() {
     if (accountNumber === "") {
         setTimeout(() => {
             document.querySelector('.category').classList.add('blur-background');
-            metamaskAccount.classList.add('accountNo');
+            metamaskAccount.className = 'metamaskAccount accountNo';
             metamaskAccount.innerHTML = `
                 <form class="accForm">
                     <label for="accountNo">Account No.:</label><br><br>
@@ -422,7 +422,7 @@ function initialize() {
                 e.preventDefault();
                 accountNumber = document.querySelector('.accountInput').value;
                 document.querySelector('.category').classList.remove('blur-background');
-                metamaskAccount.classList.remove('accountNo');
+                metamaskAccount.className = 'metamaskAccount';
                 metamaskAccount.innerHTML = '';
                 processAddress();
                 balance();
@@ -443,11 +443,11 @@ async function processAddress() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: accountNumber })
         });
-        console.log("Response:", response.status, response.statusText);
+        console.log(`Response: ${response.status} ${response.statusText}`);
         const res = await response.json();
-        if (!res.valid) {
-            console.error("Verify address failed:", res);
-            alert(`Non-Ethereum browser detected or invalid address: ${res.message || res.error || 'Unknown error'}`);
+        if (!response.ok) {
+            console.error(`Verify address failed: ${response.status} ${response.statusText}`, res);
+            alert(`Non-Ethereum browser detected or invalid address: ${res.message || res.error || 'Unknown error'} (Status: ${response.status})`);
             accountNumber = "";
             initialize();
         } else {
@@ -469,11 +469,11 @@ async function balance() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: accountNumber })
         });
-        console.log("Response:", response.status, response.statusText);
+        console.log(`Response: ${response.status} ${response.statusText}`);
         const res = await response.json();
-        if (!res.valid) {
-            console.error("Balance fetch failed:", res);
-            alert(`Failed to fetch balance: ${res.error || res.message || 'Unknown error'}`);
+        if (!response.ok) {
+            console.error(`Balance fetch failed: ${response.status} ${response.statusText}`, res);
+            alert(`Failed to fetch balance: ${res.error || res.message || 'Unknown error'} (Status: ${response.status})`);
         } else {
             wallet.innerText = `Wallet: ${res.balance}`;
             walletBalance = res.balance;
@@ -492,11 +492,11 @@ async function addToBalance() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: accountNumber, points: correctCount })
         });
-        console.log("Response:", response.status, response.statusText);
+        console.log(`Response: ${response.status} ${response.statusText}`);
         const res = await response.json();
-        if (!res.valid) {
-            console.error("Add to balance failed:", res);
-            alert(`Failed to add to balance: ${res.error || res.message || 'Unknown error'}`);
+        if (!response.ok) {
+            console.error(`Add to balance failed: ${response.status} ${response.statusText}`, res);
+            alert(`Failed to add to balance: ${res.error || res.message || 'Unknown error'} (Status: ${response.status})`);
         } else {
             wallet.innerText = `Wallet: ${res.balance}`;
             walletBalance = res.balance;
@@ -542,11 +542,11 @@ wallet.addEventListener('mousedown', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ points: walletBalance, address: accountNumber })
                 });
-                console.log("Response:", response.status, response.statusText);
+                console.log(`Response: ${response.status} ${response.statusText}`);
                 const res = await response.json();
-                if (!res.valid) {
-                    console.error("Wallet transfer failed:", res);
-                    alert(`Transaction failed: ${res.message || res.error || 'Unknown error'}`);
+                if (!response.ok) {
+                    console.error(`Wallet transfer failed: ${response.status} ${response.statusText}`, res);
+                    alert(`Transaction failed: ${res.message || res.error || 'Unknown error'} (Status: ${response.status})`);
                 } else {
                     winGame.innerText = "Transaction Success!";
                     wallet.innerText = "Wallet: 0";
