@@ -289,7 +289,9 @@ def wallet_transfer():
             "gasPrice": w3.to_wei("20", "gwei"),
         }
         signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        tx_hash = w3.eth.send_raw_transaction(
+            signed_tx.raw_transaction
+        )  # Fixed: raw_transaction
         logger.info(f"Transaction sent: {tx_hash.hex()}")
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         if receipt.status == 0:
@@ -352,7 +354,9 @@ def transfer():
                 }
             )
             signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(
+                signed_tx.raw_transaction
+            )  # Fixed: raw_transaction
             logger.info(f"Transaction sent: {tx_hash.hex()}")
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
             if receipt.status == 0:
@@ -377,7 +381,9 @@ def transfer():
                 "gasPrice": w3.to_wei("20", "gwei"),
             }
             signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(
+                signed_tx.raw_transaction
+            )  # Fixed: raw_transaction
             logger.info(f"Transaction sent: {tx_hash.hex()}")
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
             if receipt.status == 0:
