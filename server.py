@@ -73,6 +73,20 @@ def ping():
     return jsonify({"status": "ok"}), 200
 
 
+@app.route("/")
+def index():
+    return (
+        jsonify(
+            {
+                "message": "Welcome to the WordHuntNFT API",
+                "nft_contract_address": nft_address,
+                "transfer_contract_address": transfer_address,
+            }
+        ),
+        200,
+    )
+
+
 @app.route("/balance", methods=["POST"])
 def get_balance():
     try:
