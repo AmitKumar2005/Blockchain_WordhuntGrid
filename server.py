@@ -332,10 +332,6 @@ def transfer():
                 ),
                 400,
             )
-
-        recipient_address = w3.to_checksum_address(recipient_address)
-        nonce = w3.eth.get_transaction_count(my_address)
-
         if points == 10:
             # Use awardCompletion for points == 10 to transfer Ether and mint NFT
             token_uri = (
@@ -344,10 +340,11 @@ def transfer():
             logger.info(
                 f"Calling awardCompletion for {recipient_address} with points: {points}, tokenURI: {token_uri}"
             )
+            nonce = w3.eth.get_transaction_count(my_address)
             # Estimate gas
             try:
                 gas = transfer_contract.functions.awardCompletion(
-                    recipient_address, points, token_uri
+                    w3.to_checksum_address(recipient_address), points, token_uri
                 ).estimate_gas({"from": my_address})
             except Exception as gas_error:
                 logger.error(f"Gas estimation failed: {gas_error}")
@@ -361,7 +358,7 @@ def transfer():
                     500,
                 )
             tx = transfer_contract.functions.awardCompletion(
-                recipient_address, points, token_uri
+                w3.to_checksum_address(recipient_address), points, token_uri
             ).build_transaction(
                 {
                     "from": my_address,
@@ -376,7 +373,7 @@ def transfer():
             logger.info(f"Transaction sent: {tx_hash.hex()}")
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
             if receipt.status == 0:
-                # Fetch revert reason
+                # Try to fetch revert reason
                 try:
                     w3.eth.call(
                         {
@@ -384,7 +381,11 @@ def transfer():
                             "to": transfer_address,
                             "data": transfer_contract.encodeABI(
                                 fn_name="awardCompletion",
-                                args=[recipient_address, points, token_uri],
+                                args=[
+                                    w3.to_checksum_address(recipient_address),
+                                    points,
+                                    token_uri,
+                                ],
                             ),
                         },
                         block_identifier=receipt.blockNumber,
@@ -394,88 +395,139 @@ def transfer():
                     logger.error(
                         f"Transaction failed with revert reason: {revert_reason}"
                     )
-                    return (
-                        jsonify(
-                            {
-                                "valid": False,
-                                "message": f"Transaction failed: {revert_reason}",
-                            }
-                        ),
-                        500,
+                    # Fallback: Try direct Ether transfer
+                    logger.info(
+                        "awardCompletion failed, attempting direct Ether transfer"
                     )
+                    nonce += 1
+                    total_amount = points * 10**15
+                    tx_ether = {
+                        "from": my_address,
+                        "to": w3.to_checksum_address(recipient_address),
+                        "value": total_amount,
+                        "nonce": nonce,
+                        "chainId": chain_id,
+                        "gas": 21000,
+                        "gasPrice": w3.to_wei("20", "gwei"),
+                    }
+                    signed_ether_tx = w3.eth.account.sign_transaction(
+                        tx_ether, private_key=private_key
+                    )
+                    ether_tx_hash = w3.eth.send_raw_transaction(
+                        signed_ether_tx.raw_transaction
+                    )
+                    logger.info(
+                        f"Ether transfer transaction sent: {ether_tx_hash.hex()}"
+                    )
+                    ether_receipt = w3.eth.wait_for_transaction_receipt(ether_tx_hash)
+                    if ether_receipt.status == 0:
+                        logger.error("Ether transfer transaction failed")
+                        return (
+                            jsonify(
+                                {
+                                    "valid": False,
+                                    "message": f"Transaction failed: {revert_reason}",
+                                }
+                            ),
+                            500,
+                        )
+                    # Proceed to mint NFT directly
+                    logger.info("Ether transfer succeeded, attempting NFT mint")
+                    nonce += 1
+                    try:
+                        gas = nft_contract.functions.mintNFT(
+                            w3.to_checksum_address(recipient_address), token_uri
+                        ).estimate_gas({"from": my_address})
+                    except Exception as gas_error:
+                        logger.error(f"NFT mint gas estimation failed: {gas_error}")
+                        return (
+                            jsonify(
+                                {
+                                    "valid": False,
+                                    "message": f"NFT mint failed: {str(gas_error)}",
+                                }
+                            ),
+                            500,
+                        )
+                    tx_nft = nft_contract.functions.mintNFT(
+                        w3.to_checksum_address(recipient_address), token_uri
+                    ).build_transaction(
+                        {
+                            "from": my_address,
+                            "nonce": nonce,
+                            "chainId": chain_id,
+                            "gas": gas + 10000,
+                            "gasPrice": w3.to_wei("20", "gwei"),
+                        }
+                    )
+                    signed_nft_tx = w3.eth.account.sign_transaction(
+                        tx_nft, private_key=private_key
+                    )
+                    nft_tx_hash = w3.eth.send_raw_transaction(
+                        signed_nft_tx.raw_transaction
+                    )
+                    logger.info(f"NFT mint transaction sent: {nft_tx_hash.hex()}")
+                    nft_receipt = w3.eth.wait_for_transaction_receipt(nft_tx_hash)
+                    if nft_receipt.status == 0:
+                        logger.error("NFT mint transaction failed")
+                        try:
+                            revert_reason = w3.eth.call(
+                                {
+                                    "from": my_address,
+                                    "to": nft_address,
+                                    "data": nft_contract.encodeABI(
+                                        fn_name="mintNFT",
+                                        args=[
+                                            w3.to_checksum_address(recipient_address),
+                                            token_uri,
+                                        ],
+                                    ),
+                                },
+                                block_identifier=nft_receipt.blockNumber,
+                            )
+                        except Exception as revert_error:
+                            revert_reason = str(revert_error)
+                        return (
+                            jsonify(
+                                {
+                                    "valid": False,
+                                    "message": f"NFT mint failed: {revert_reason}",
+                                }
+                            ),
+                            500,
+                        )
+                    logger.info(f"NFT and Ether transferred to {recipient_address}")
+                    return jsonify(
+                        {"valid": True, "message": "Successfully sent NFT and Ether"}
+                    )
+                logger.error("Transaction failed without specific revert reason")
                 return jsonify({"valid": False, "message": "Transaction failed"}), 500
             logger.info(f"NFT and Ether transferred to {recipient_address}")
             return jsonify(
                 {"valid": True, "message": "Successfully sent NFT and Ether"}
             )
         else:
-            # Use transferEther for points != 10
-            logger.info(
-                f"Calling transferEther for {recipient_address} with points: {points}"
-            )
-            # Estimate gas
-            try:
-                gas = transfer_contract.functions.transferEther(
-                    recipient_address, points
-                ).estimate_gas({"from": my_address})
-            except Exception as gas_error:
-                logger.error(f"Gas estimation failed: {gas_error}")
-                return (
-                    jsonify(
-                        {
-                            "valid": False,
-                            "message": f"Gas estimation failed: {str(gas_error)}",
-                        }
-                    ),
-                    500,
-                )
-            tx = transfer_contract.functions.transferEther(
-                recipient_address, points
-            ).build_transaction(
-                {
-                    "from": my_address,
-                    "nonce": nonce,
-                    "chainId": chain_id,
-                    "gas": gas + 10000,
-                    "gasPrice": w3.to_wei("20", "gwei"),
-                }
-            )
+            # Handle non-10 points case (direct Ether transfer)
+            total_amount = points * 10**15
+            logger.info(f"Transfer amount for {points} points: {total_amount}")
+            nonce = w3.eth.get_transaction_count(my_address)
+            tx = {
+                "from": my_address,
+                "to": w3.to_checksum_address(recipient_address),
+                "value": total_amount,
+                "nonce": nonce,
+                "chainId": chain_id,
+                "gas": 21000,
+                "gasPrice": w3.to_wei("20", "gwei"),
+            }
             signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
             tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             logger.info(f"Transaction sent: {tx_hash.hex()}")
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
             if receipt.status == 0:
-                # Fetch revert reason
-                try:
-                    w3.eth.call(
-                        {
-                            "from": my_address,
-                            "to": transfer_address,
-                            "data": transfer_contract.encodeABI(
-                                fn_name="transferEther",
-                                args=[recipient_address, points],
-                            ),
-                        },
-                        block_identifier=receipt.blockNumber,
-                    )
-                except Exception as revert_error:
-                    revert_reason = str(revert_error)
-                    logger.error(
-                        f"Transaction failed with revert reason: {revert_reason}"
-                    )
-                    return (
-                        jsonify(
-                            {
-                                "valid": False,
-                                "message": f"Transaction failed: {revert_reason}",
-                            }
-                        ),
-                        500,
-                    )
+                logger.error("Transaction failed")
                 return jsonify({"valid": False, "message": "Transaction failed"}), 500
-            logger.info(f"Ether transferred to {recipient_address}")
             return jsonify({"valid": True, "message": "Successfully sent Ether"})
-
     except Exception as e:
         logger.error(f"Error in /transfer: {e}", exc_info=True)
         return jsonify({"valid": False, "message": str(e)}), 500
