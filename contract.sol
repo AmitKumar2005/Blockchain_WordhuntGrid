@@ -36,24 +36,23 @@ contract WordHuntNFT is ERC721, ERC721URIStorage {
     }
 }
 
-contract transfer is Ownable {
-    uint256 public perCorrect = 1e15;
+contract Transfer is Ownable {
+    uint256 public perCorrect = 1e15; // 0.001 ETH
     mapping(address => uint256) public sender;
-    address from;
-    address to;
     WordHuntNFT public nftContract;
 
     constructor(address _nftContractAddress) Ownable(msg.sender) {
         nftContract = WordHuntNFT(_nftContractAddress);
     }
 
+    // For points == 10: Transfer Ether and mint NFT
     function awardCompletion(
         address player,
         uint256 points,
         string memory tokenURI_
     ) public payable onlyOwner {
         require(points == 10, "Must complete game (10 points)");
-        uint256 transferEth = points * perCorrect;
+        uint256 transferEth = points * perCorrect; // 10 * 0.001 ETH = 0.01 ETH
         require(
             address(this).balance >= transferEth,
             "Insufficient contract balance"
@@ -62,12 +61,10 @@ contract transfer is Ownable {
         nftContract.mintNFT(player, tokenURI_);
     }
 
-    function transferEtherOnly(
-        address player,
-        uint256 points
-    ) public onlyOwner {
-        require(points == 10, "Must complete game (10 points)");
-        uint256 transferEth = points * perCorrect;
+    // For any points: Transfer Ether only
+    function transferEther(address player, uint256 points) public onlyOwner {
+        require(points > 0, "Points must be greater than zero");
+        uint256 transferEth = points * perCorrect; // points * 0.001 ETH
         require(
             address(this).balance >= transferEth,
             "Insufficient contract balance"
@@ -75,6 +72,7 @@ contract transfer is Ownable {
         payable(player).transfer(transferEth);
     }
 
+    // Optional: Mint NFT only (if needed separately)
     function mintNFTOnly(
         address player,
         string memory tokenURI_
@@ -82,18 +80,10 @@ contract transfer is Ownable {
         nftContract.mintNFT(player, tokenURI_);
     }
 
-    function spendCoins(
-        address player,
-        uint256 amount,
-        string memory item
-    ) public {
-        require(amount <= address(this).balance, "Contract lacks funds");
-        require(msg.sender == player, "Only player can spend");
-        payable(player).transfer(amount);
-        emit CoinSpent(player, amount, item);
-    }
-
-    event CoinSpent(address indexed player, uint256 amount, string item);
-
+    // Allow depositing Ether to fund the contract
     function deposit() public payable {}
+
+    // Event for tracking transfers
+    event EtherTransferred(address indexed player, uint256 amount);
+    event NFTMinted(address indexed player, uint256 tokenId);
 }
