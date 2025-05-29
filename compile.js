@@ -5,9 +5,7 @@ const solc = require("solc");
 const contractPath = path.resolve(__dirname, "contract.sol");
 const source = fs.readFileSync(contractPath, "utf8");
 
-// Map OpenZeppelin imports
 const findImports = (importPath) => {
-    // Handle OpenZeppelin imports
     if (importPath.startsWith("@openzeppelin/contracts/")) {
         const fullPath = path.resolve(__dirname, "node_modules", importPath);
         if (fs.existsSync(fullPath)) {
@@ -16,7 +14,6 @@ const findImports = (importPath) => {
             return { error: `File not found: ${fullPath}` };
         }
     }
-    // Handle other imports (if any)
     const fullPath = path.resolve(__dirname, importPath);
     if (fs.existsSync(fullPath)) {
         return { contents: fs.readFileSync(fullPath, "utf8") };
@@ -47,7 +44,7 @@ try {
     const output = JSON.parse(solc.compile(JSON.stringify(input), { import: findImports }));
 
     if (output.errors) {
-        console.error("❌ Compilation failed:");
+        console.error("Compilation failed:");
         output.errors.forEach((err) => {
             console.error(err.formattedMessage || err.message);
         });
@@ -56,7 +53,7 @@ try {
 
     const contracts = output.contracts["contract.sol"];
     if (!contracts) {
-        console.error("❌ No contracts found in compilation output");
+        console.error("No contracts found in compilation output");
         process.exit(1);
     }
 
@@ -66,7 +63,7 @@ try {
             abi: contracts[name].abi,
             bytecode: contracts[name].evm.bytecode.object,
         };
-        console.log(`✅ Compiled ${name}`);
+        console.log(`Compiled ${name}`);
     }
 
     const outPath = path.resolve(__dirname, "contract_data.json");
@@ -75,8 +72,8 @@ try {
         JSON.stringify(contractData, null, 2),
         "utf8"
     );
-    console.log(`✅ Saved ABI and bytecode for all contracts to ${outPath}`);
+    console.log(`Saved ABI and bytecode for all contracts to ${outPath}`);
 } catch (error) {
-    console.error("❌ Compilation error:", error.message);
+    console.error("Compilation error:", error.message);
     process.exit(1);
 }

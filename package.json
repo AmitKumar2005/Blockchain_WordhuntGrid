@@ -7049,28 +7049,5 @@
         "node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol": {
             "id": 18
         }
-    },
-    "dependencies": {
-        "@openzeppelin/contracts": "^5.3.0",
-        "solc": "^0.8.30"
-    },
-    "name": "blockchain",
-    "version": "1.0.0",
-    "description": "This is a Blockchain based memory game, where the user is supposed to find word from the grid. \r For each word found, user gets 1 token and after the finish of game, user gets ether price corresponding to the tokens collected.",
-    "main": "compile.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/AmitKumar2005/Blockchain_WordhuntGrid.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "type": "commonjs",
-    "bugs": {
-        "url": "https://github.com/AmitKumar2005/Blockchain_WordhuntGrid/issues"
-    },
-    "homepage": "https://github.com/AmitKumar2005/Blockchain_WordhuntGrid#readme"
+    }
 }

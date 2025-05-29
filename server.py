@@ -30,7 +30,6 @@ else:
     logger.error("ALCHEMY_URL not set")
     raise ValueError("ALCHEMY_URL not set")
 
-# Load contract data
 try:
     with open("contract_data.json", "r") as file:
         contract_data = json.load(file)
@@ -57,9 +56,9 @@ if not all([my_address, private_key, nft_address, transfer_address]):
 my_address = w3.to_checksum_address(my_address)
 nft_address = w3.to_checksum_address(nft_address)
 transfer_address = w3.to_checksum_address(transfer_address)
-chain_id = 11155111  # Sepolia
+chain_id = 11155111
 
-# Initialize contracts
+
 nft_contract = w3.eth.contract(address=nft_address, abi=nft_abi)
 transfer_contract = w3.eth.contract(address=transfer_address, abi=transfer_abi)
 logger.info(f"NFT contract initialized at: {nft_address}")
@@ -87,7 +86,6 @@ def get_db_connection():
         return None
 
 
-# Test database connection on startup
 try:
     connection = get_db_connection()
     if connection:
@@ -333,15 +331,11 @@ def transfer():
                 400,
             )
         if points == 10:
-            # Use awardCompletion for points == 10 to transfer Ether and mint NFT
-            token_uri = (
-                "https://ipfs.io/ipfs/QmActualHash"  # Replace with your IPFS hash
-            )
+            token_uri = "https://ipfs.io/ipfs/QmActualHash"
             logger.info(
                 f"Calling awardCompletion for {recipient_address} with points: {points}, tokenURI: {token_uri}"
             )
             nonce = w3.eth.get_transaction_count(my_address)
-            # Estimate gas
             try:
                 gas = transfer_contract.functions.awardCompletion(
                     w3.to_checksum_address(recipient_address), points, token_uri
@@ -373,7 +367,6 @@ def transfer():
             logger.info(f"Transaction sent: {tx_hash.hex()}")
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
             if receipt.status == 0:
-                # Try to fetch revert reason
                 try:
                     w3.eth.call(
                         {
@@ -395,7 +388,6 @@ def transfer():
                     logger.error(
                         f"Transaction failed with revert reason: {revert_reason}"
                     )
-                    # Fallback: Try direct Ether transfer
                     logger.info(
                         "awardCompletion failed, attempting direct Ether transfer"
                     )
@@ -507,7 +499,6 @@ def transfer():
                 {"valid": True, "message": "Successfully sent NFT and Ether"}
             )
         else:
-            # Handle non-10 points case (direct Ether transfer)
             total_amount = points * 10**15
             logger.info(f"Transfer amount for {points} points: {total_amount}")
             nonce = w3.eth.get_transaction_count(my_address)
